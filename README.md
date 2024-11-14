@@ -1,14 +1,18 @@
 # Shoppy List
-A grocery list generator that lets users enter recipe urls then adds and condenses all the ingredients (and units) into the shopping list. 
+
+A grocery list generator that lets users enter recipe urls then adds and condenses all the ingredients (and units) into the shopping list.
 This is a personal project that I wanted to create to make my life easier when I need to do grocery shopping for multiple recipes.
 
-# How to set up
+# How to set up locally
+
 1. Download the project
 2. In your terminal, change your directory to the root directory of this project
 3. install all dependancies with `npm i`
-4. run `npm run build && npm run start` if you want to run prod mode or `npm run dev` if you want to run development mode (TODO: Currently prod mode not working. will come back to address this later)
+4. run `npm run build && npm run start` if you want to run prod mode or `npm run dev` if you want to run development mode
+5. type in `localhost:3000` in your browser
 
 # Current Features:
+
 - an input to allow users to enter a recipe url
 - after a user submits a url string, the application will pull recipe ingredients and create a shopping list with ingredients.
 - user can continue to add more urls and the application will add the new ingredients to the shopping list
@@ -18,6 +22,7 @@ This is a personal project that I wanted to create to make my life easier when I
 - user can adjust serving scale bar of each recipe entered
 
 # Things to improve/wip/bugs/features/etc:
+
 - add tests
 - some recipes would load forever
 - condense ingredients and their measurement units
@@ -28,4 +33,3 @@ This is a personal project that I wanted to create to make my life easier when I
 - will add functionality to register and login, but login/registration is not required to use the app, but will help if you want to use the app on multiple devices
 - will add functionality to store recipe data in browser's storage
 - more to come...
-

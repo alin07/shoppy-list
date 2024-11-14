@@ -5,7 +5,7 @@ import RecipeUrlInput from "./components/recipeUrlInput";
 import { Recipe, RecipeUrl } from './interfaces/recipe';
 import { ParsedIngredient, IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/Ingredient';
 import { parseIngredient } from 'parse-ingredient';
-import { retrieveRecipe, getValue, unitConverter } from "./utils/ingredients";
+import { retrieveRecipe, getValue } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';
 
 
@@ -53,7 +53,7 @@ export default function Home() {
               }
             }
             else { // units don't match so we'll try to match it
-              unitConverter(curIngs.quantity, curIngs.unit, ingAmt.quantity, ingAmt.unit)
+              // unitConverter(curIngs.quantity, curIngs.unit, ingAmt.quantity, ingAmt.unit)
             }
           }
 
