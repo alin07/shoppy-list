@@ -12,6 +12,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).send(data);
   } catch (err) {
     console.error('Error fetching recipe:', err);
-    res.status(500).json({ message: 'Error fetching recipe' });
+    res.status(500).json({ message: 'Error fetching recipe. ' + err });
   }
 }
