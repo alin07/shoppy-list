@@ -1,100 +1,225 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from 'react';
+import { RecipeIngredientList } from './components/recipeIngredientList'
+import RecipeUrlInput from "./components/recipeUrlInput";
+import { Recipe, RecipeUrl } from './interfaces/recipe';
+import { ParsedIngredient, IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/Ingredient';
+import { parseIngredient } from 'parse-ingredient';
+import { retrieveRecipe, getValue, unitConverter } from "./utils/ingredients";
+import { ShoppingIngredientList } from './components/shoppingIngredientList';
+
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [recipe, setRecipe] = useState<string>("");
+  const [recipeUrls, setRecipeUrls] = useState<RecipeUrl[]>([]);
+  const [ingredients, setIngredients] = useState<IngredientCheckbox[]>([]);
+  const [ingredientProportionMap, setIngredientProportionMap] = useState<IngredientProportionObject>({});
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const onChangeRecipe = (url: string) => {
+    setRecipe(url);
+  }
+
+  const sortIngredients = (a: IngredientCheckbox, b: IngredientCheckbox) => {
+    if (!a.isChecked && b.isChecked) {
+      return -1;
+    } else if (!b.isChecked && a.isChecked) {
+      return 1;
+    } else return a.curOrder - b.curOrder;
+  }
+
+  useEffect(() => {
+    const updateIngredientList = () => {
+
+      const updatedIngObj: IngredientMap = Object.entries(ingredientProportionMap).reduce((acc, curVal) => {
+
+        const ingObj: IngredientProportion = curVal[1];
+
+        let ings = {};
+
+        ingObj.ingredientsScaled.forEach((i) => {
+          const curIngs = (acc as IngredientMap)[i.description];
+          if (i.quantity === 0) return acc;
+          let ingAmt = {
+            quantity: i.quantity || 0,
+            unit: i.unitOfMeasure || ""
+          }
+
+          if (curIngs) {
+            if (ingAmt.unit === curIngs.unit) {
+              ingAmt = {
+                ...ingAmt,
+                quantity: ingAmt.quantity + curIngs.quantity
+              }
+            }
+            else { // units don't match so we'll try to match it
+              unitConverter(curIngs.quantity, curIngs.unit, ingAmt.quantity, ingAmt.unit)
+            }
+          }
+
+          ings = {
+            ...ings,
+            [i.description]: ingAmt
+          }
+
+        });
+        return { ...acc, ...ings };
+      }, {});
+
+      const ingArr = Object.keys(updatedIngObj).map((ing, index) =>
+      ({
+        name: `${updatedIngObj[ing].quantity === 0
+          ? ""
+          : updatedIngObj[ing].quantity + " "}${updatedIngObj[ing].unit + " "}${ing}`
+          .trim(),
+        isChecked: false,
+        listOrder: index,
+        curOrder: index
+      }));
+      setIngredients(ingArr)
+    }
+
+    updateIngredientList();
+
+  }, [ingredientProportionMap]);
+
+  const onRecipeUrlAdd = (url: string) => {
+    if (recipeUrls.some(ru => ru.url === url)) {
+      setError("Recipe URL already in the list");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
+    setRecipeUrls([
+      ...recipeUrls,
+      {
+        url,
+        isLoading: true,
+        ldJson: {}
+      }]);
+    setRecipe("");
+    fetchRecipeData(url);
+  }
+
+  const fetchRecipeData = async (url: string) => {
+    try {
+      const recipeData: Recipe = await retrieveRecipe(url);
+      const recipeIng: string[] | undefined = recipeData?.recipeIngredient || [];
+
+      if (recipeData?.recipeIngredient) {
+
+        let parsedIngredients: ParsedIngredient[] = []
+
+        for (const ing in recipeIng) {
+          try {
+            const parsed = parseIngredient(recipeIng[ing])[0];
+            parsedIngredients = [...parsedIngredients, parsed];
+          } catch (e) {
+            console.error(e, recipeIng[ing]);
+          }
+        }
+        const recipeYield = getValue(recipeData?.recipeYield);
+
+        const ingProportionMap = {
+          proportion: 1,
+          recipeYield: recipeYield,
+          ingredients: [...parsedIngredients],
+          ingredientsScaled: [...parsedIngredients]
+        };
+        console.log("ings from recipe url fetch", ingProportionMap)
+
+        setIngredientProportionMap({
+          ...ingredientProportionMap,
+          [url]: ingProportionMap
+        });
+
+        setRecipeUrls(prevUrls =>
+          prevUrls.map(ru =>
+            ru.url === url ? { ...ru, isLoading: false, ldJson: recipeData } : ru
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Error fetching recipe:', err);
+      setError("Failed to retrieve the recipe");
+      setTimeout(() => setError(null), 10000);
+      setRecipeUrls(prevUrls =>
+        prevUrls.filter(ru =>
+          ru.url === url
+        )
+      );
+    }
+  }
+
+  const setChecked = (e: React.MouseEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const isChecked = target.checked;
+    let newIng = ingredients;
+    const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
+
+    if (curOrder === null || curOrder === undefined) return;
+    const ing: IngredientCheckbox = ingredients[curOrder];
+
+    newIng.splice(curOrder, 1);
+    newIng = [...newIng,
+    {
+      ...ing,
+      isChecked: isChecked,
+      curOrder: isChecked ? curOrder : ing.listOrder
+    }].sort(sortIngredients);
+
+    setIngredients(newIng)
+  }
+
+  return (
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="w-full flex flex-col row-start-2 items-center sm:items-start">
+        <div className="w-full mb-4">
+          <RecipeUrlInput
+            url={recipe}
+            onUrlChange={onChangeRecipe}
+            onSubmitUrl={() => onRecipeUrlAdd(recipe)}
+            error={error}
+          />
+        </div>
+        <div className="flex w-full justify-between">
+          <ShoppingIngredientList
+            ingredients={ingredients}
+            setChecked={setChecked}
+          />
+
+          <div className="right">
+            <div>
+              {
+                recipeUrls.map(recipe =>
+                  <div key={recipe.url} className="mb-4">
+                    <div className="flex items-center space-x-4">
+
+                      {recipe.isLoading &&
+                        <div>
+                          <a href={recipe.url}>
+                            {recipe.url}
+                          </a>
+                          <p>Loading...</p>
+                        </div>}
+                    </div>
+                    {!recipe.isLoading && recipe.ldJson && (
+                      <RecipeIngredientList
+                        url={recipe.url}
+                        recipeItems={recipe.ldJson}
+                        ingredientProportionMap={ingredientProportionMap}
+                        setIngredientProportionMap={setIngredientProportionMap}
+                      />
+                    )}
+                  </div>
+                )
+              }
+            </div>
+          </div>
+
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
       </footer>
     </div>
   );
