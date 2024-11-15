@@ -2,11 +2,26 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium-min';
 
+async function setup() {
+  const executablePath = await chromium.executablePath(
+    `https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar`
+  );
+
+  return await puppeteer.launch({
+    args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+    defaultViewport: chromium.defaultViewport,
+    executablePath,
+    headless: chromium.headless,
+  });
+}
+const browserPromise = setup();
+
 export const config = {
   maxDuration: 5,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const browser = await browserPromise;
   const { url } = req.query;
 
   if (!url || typeof url !== 'string') {
@@ -14,17 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const executablePath = await chromium.executablePath(
-      `https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar`
-    );
-
-    const browser = await puppeteer.launch({
-      args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
-      defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless: chromium.headless,
-    });
-
     const page = await browser.newPage();
 
     // Increase the timeout for page.goto
