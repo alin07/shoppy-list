@@ -1,7 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium-min';
-export const maxDuration = 60;
+
+export const config = {
+  maxDuration: 5,
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.query;
 
