@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import chromium from '@sparticuz/chromium-min';
 import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.query;
@@ -10,16 +10,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const executablePath = await chromium.executablePath;
-
-    if (!executablePath) {
-      return res.status(500).json({ message: 'Could not find Chromium executable' });
-    }
-
     const browser = await puppeteer.launch({
       args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
       defaultViewport: chromium.defaultViewport,
-      executablePath,
+      executablePath: await chromium.executablePath(
+        `https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar`
+      ),
       headless: chromium.headless,
     });
 
