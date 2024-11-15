@@ -17,7 +17,7 @@ async function setup() {
 const browserPromise = setup();
 
 export const config = {
-  maxDuration: 5,
+  maxDuration: 60,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
