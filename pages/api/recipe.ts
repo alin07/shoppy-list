@@ -9,7 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      args: ['--hide-scrollbars', '--disable-web-security'],
+      headless: true,
+    });
+
     const page = await browser.newPage();
 
     // Navigate to the provided URL
@@ -17,7 +21,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Extract the content of the ld+json script tag
     const jsonLdContent = await page.evaluate(() => {
-      console.log(document)
       const scriptTag = document.querySelector('script[type="application/ld+json"]');
       return scriptTag ? scriptTag.innerHTML : null;
     });
