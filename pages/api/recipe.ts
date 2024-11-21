@@ -1,27 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
-
-async function setup() {
-  const executablePath = await chromium.executablePath(
-    `https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar`
-  );
-
-  return await puppeteer.launch({
-    args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: chromium.headless,
-  });
-}
-const browserPromise = setup();
+import { chromium } from 'playwright';
 
 export const config = {
   maxDuration: 60,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const browser = await browserPromise;
   const { url } = req.query;
 
   if (!url || typeof url !== 'string') {
@@ -29,10 +13,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const browser = await chromium.launch();
     const page = await browser.newPage();
-
-    // Increase the timeout for page.goto
-    await page.goto(url as string, { waitUntil: 'networkidle0', timeout: 60000 });
+    await page.goto(url);
 
     // Extract the content of the ld+json script tag
     const jsonLdContent = await page.evaluate(() => {

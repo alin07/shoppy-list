@@ -7,9 +7,10 @@ This is a personal project that I wanted to create to make my life easier when I
 
 1. Download the project
 2. In your terminal, change your directory to the root directory of this project
-3. install all dependancies with `npm i`
-4. run `npm run build && npm run start` if you want to run prod mode or `npm run dev` if you want to run development mode
-5. type in `localhost:3000` in your browser
+3. (running dev only) Install chromium on your computer. If you're on MacOS, you can run `brew install chromium` in your terminal. Then run `which chromium` to find the path. Copy and paste the path on line 19 in `pages/api/recipe.ts`
+4. Install all dependancies with `npm i`
+5. Run `npm run build && npm run start` if you want to run prod mode or `npm run dev` if you want to run development mode
+6. type in `localhost:3000` in your browser
 
 # Current Features:
 
