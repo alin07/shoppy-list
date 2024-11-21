@@ -97,6 +97,7 @@ export default function Home() {
         isLoading: true,
         ldJson: {}
       }]);
+
     setRecipe("");
     fetchRecipeData(url);
   }
@@ -105,6 +106,8 @@ export default function Home() {
     try {
       const recipeData: Recipe = await retrieveRecipe(url);
       const recipeIng: string[] | undefined = recipeData?.recipeIngredient || [];
+
+      console.log(recipeData);
 
       if (recipeData?.recipeIngredient) {
 
@@ -126,7 +129,6 @@ export default function Home() {
           ingredients: [...parsedIngredients],
           ingredientsScaled: [...parsedIngredients]
         };
-        console.log("ings from recipe url fetch", ingProportionMap)
 
         setIngredientProportionMap({
           ...ingredientProportionMap,
@@ -158,6 +160,7 @@ export default function Home() {
     const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
 
     if (curOrder === null || curOrder === undefined) return;
+
     const ing: IngredientCheckbox = ingredients[curOrder];
 
     newIng.splice(curOrder, 1);
@@ -168,7 +171,7 @@ export default function Home() {
       curOrder: isChecked ? curOrder : ing.listOrder
     }].sort(sortIngredients);
 
-    setIngredients(newIng)
+    setIngredients(newIng);
   }
 
   return (

@@ -13,6 +13,7 @@ const RecipeUrlInput: React.FC<RecipeUrlInputProps> = ({ error, url, onUrlChange
       {error && <span>{error}</span>}
       <div className="flex w-full justify-center">
         <input
+          name="recipe-url-input"
           className="w-11/12 p-1 border border-gray-300"
           type="text"
           value={url}

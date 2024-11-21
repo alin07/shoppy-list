@@ -3,6 +3,10 @@ export interface RecipeUrl {
   isLoading?: boolean | false;
   ldJson?: Recipe;
 }
+export interface RecipeLdJson2 {
+  "@context": string;
+}
+export type RecipeLdJson = Record<"@context", string>;
 
 export interface Recipe {
   "@context"?: string;

@@ -1,3 +1,4 @@
+import { RecipeLdJson } from '@/app/interfaces/recipe';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { chromium } from 'playwright';
 
@@ -7,7 +8,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.query;
-
+  
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ message: 'URL is required' });
   }
@@ -16,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const browser = await chromium.launch();
     const page = await browser.newPage();
     await page.goto(url);
-
     // Extract the content of the ld+json script tag
     const jsonLdContent = await page.evaluate(() => {
       const scriptTag = document.querySelector('script[type="application/ld+json"]');
@@ -24,10 +24,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     await browser.close();
-
     if (jsonLdContent) {
-      const jsonData = JSON.parse(jsonLdContent);
-      return res.status(200).json(jsonData);
+      const parsedContent = JSON.parse(jsonLdContent);
+      let recipeObj = parsedContent;
+
+      if (parsedContent["@graph"] && parsedContent["@graph"]?.length > 1) {
+        recipeObj = parsedContent["@graph"];
+        console.log(recipeObj)
+        recipeObj = recipeObj.filter((obj:
+          { [x: string]: string; }
+        ) => obj["@type"] === "Recipe")[0];
+      }
+
+      return res.status(200).json(recipeObj);
     } else {
       return res.status(404).json({ message: 'No ld+json found on the page' });
     }
