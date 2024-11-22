@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { chromium } from 'playwright';
+import {chromium as playwright} from 'playwright-core';
+import chromium from "@sparticuz/chromium";
 
 export const config = {
   maxDuration: 60,
@@ -13,7 +14,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const browser = await chromium.launch();
+    const executablePath = await chromium.executablePath();
+    console.log(executablePath)
+    const browser = await playwright.launch({
+      executablePath,
+      headless: true,
+      args: chromium.args
+    });
+
     const page = await browser.newPage();
     await page.goto(url);
     // Extract the content of the ld+json script tag
