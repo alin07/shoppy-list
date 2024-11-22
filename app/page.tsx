@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { RecipeIngredientList } from './components/recipeIngredientList'
 import RecipeUrlInput from "./components/recipeUrlInput";
 import { Recipe, RecipeUrl } from './interfaces/recipe';
@@ -153,7 +153,7 @@ export default function Home() {
     }
   }
 
-  const setChecked = (e: React.MouseEvent<HTMLInputElement>) => {
+  const setChecked = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
     const isChecked = target.checked;
     let newIng = ingredients;

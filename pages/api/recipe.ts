@@ -1,4 +1,3 @@
-import { RecipeLdJson } from '@/app/interfaces/recipe';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { chromium } from 'playwright';
 
