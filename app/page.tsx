@@ -3,7 +3,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { RecipeIngredientList } from './components/recipeIngredientList'
 import RecipeUrlInput from "./components/recipeUrlInput";
 import { Recipe, RecipeUrl } from './interfaces/recipe';
-import { ParsedIngredient, IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/Ingredient';
+import { ParsedIngredient, IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
 import { parseIngredient } from 'parse-ingredient';
 import { retrieveRecipe, getValue } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';

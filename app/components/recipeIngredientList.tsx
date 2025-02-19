@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction } from "react";
 import { Recipe } from "../interfaces/recipe";
 import { parseIngredient } from 'parse-ingredient';
 import { getValue } from "../utils/ingredients";
-import { IngredientProportionObject, ParsedIngredient } from "../interfaces/Ingredient";
+import { IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
 
 
 export const RecipeIngredientList = (props: {

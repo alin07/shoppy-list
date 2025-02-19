@@ -7,6 +7,7 @@ export const retrieveRecipe = async (url: string) => {
     console.error('Error fetching recipe from site', err);
   }
 }
+
 export const getValue = (p: string | string[] | undefined) => {
   if (!p) return null;
   return Array.isArray(p) ? p[0] : p

@@ -1,5 +1,5 @@
 import React, { ChangeEventHandler } from "react";
-import { IngredientCheckbox } from "../interfaces/Ingredient";
+import { IngredientCheckbox } from "../interfaces/ingredient";
 import { Flipper, Flipped } from 'react-flip-toolkit'
 
 export const ShoppingIngredientList = (props: {
@@ -10,7 +10,7 @@ export const ShoppingIngredientList = (props: {
     ingredients,
     setChecked
   } = props
-  // className = "flex items-center mb-4"
+
   return (
     <div className="left">
       <h2>Shopping List:</h2>

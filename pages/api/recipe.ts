@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import {chromium as playwright} from 'playwright-core';
-import chromium from "@sparticuz/chromium";
-
+// import {chromium as playwright} from 'playwright-core';
+// import chromium from "@sparticuz/chromium";
+import * as cheerio from "cheerio"
 export const config = {
   maxDuration: 60,
 };
@@ -14,34 +14,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const executablePath = await chromium.executablePath();
-    console.log(executablePath)
-    const browser = await playwright.launch({
-      executablePath,
-      headless: true,
-      args: chromium.args
-    });
-
-    const page = await browser.newPage();
-    await page.goto(url);
-    // Extract the content of the ld+json script tag
-    const jsonLdContent = await page.evaluate(() => {
-      const scriptTag = document.querySelector('script[type="application/ld+json"]');
-      return scriptTag ? scriptTag.innerHTML : null;
-    });
-
-    await browser.close();
-    if (jsonLdContent) {
-      const parsedContent = JSON.parse(jsonLdContent);
-      let recipeObj = parsedContent;
-
-      if (parsedContent["@graph"] && parsedContent["@graph"]?.length > 1) {
-        recipeObj = parsedContent["@graph"];
-        console.log(recipeObj)
-        recipeObj = recipeObj.filter((obj:
-          { [x: string]: string; }
-        ) => obj["@type"] === "Recipe")[0];
-      }
+    const jsonStringified = fetch(url).then(resp => resp.text()).then(text => {
+      const $ = cheerio.load(text);
+      const ldJson = $(`script[type="application/ld+json"]`).html();
+      return ldJson;
+    })
+    const json = JSON.parse(await jsonStringified || '{}')
+    console.log(json)
+    let recipeObj = json;
+    if (json["@graph"] && json["@graph"]?.length > 1) {
+      recipeObj = json["@graph"].filter((obj: { [x: string]: string; }) => obj["@type"] === "Recipe")[0]
+    
+    console.log("======", recipeObj);
 
       return res.status(200).json(recipeObj);
     } else {
