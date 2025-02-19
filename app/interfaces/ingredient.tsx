@@ -6,6 +6,7 @@ export interface ParsedIngredient {
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
 }
+
 export interface IngredientProportion {
   ingredients: ParsedIngredient[];
   ingredientsScaled: ParsedIngredient[];
@@ -16,7 +17,7 @@ export interface IngredientProportion {
 export type IngredientProportionObject = Record<string, IngredientProportion>;
 
 export interface IngredientMap {
-  [ingredient: string]: IngredientMapItem
+  [ingredient: string]: IngredientMapItem;
 }
 
 export interface IngredientMapItem {
