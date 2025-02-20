@@ -15,7 +15,7 @@ export default function Home() {
   const [ingredients, setIngredients] = useState<IngredientCheckbox[]>([]);
   const [ingredientProportionMap, setIngredientProportionMap] = useState<IngredientProportionObject>({});
   const [error, setError] = useState<string | null>(null);
-
+  console.log(ingredients, ingredientProportionMap)
   const onChangeRecipe = (url: string) => {
     setRecipe(url);
   }
@@ -145,6 +145,7 @@ export default function Home() {
       console.error('Error fetching recipe:', err);
       setError("Failed to retrieve the recipe");
       setTimeout(() => setError(null), 10000);
+
       setRecipeUrls(prevUrls =>
         prevUrls.filter(ru =>
           ru.url === url
@@ -175,8 +176,9 @@ export default function Home() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="w-full flex flex-col row-start-2 items-center sm:items-start">
+    <div className="grid grid-rows-[20px_1fr_20px] min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="w-full flex flex-col row-start-2  sm:items-start">
+        <h1 className="text-4xl mb-4">Shoppy List</h1>
         <div className="w-full mb-4">
           <RecipeUrlInput
             url={recipe}
