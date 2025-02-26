@@ -21,9 +21,9 @@ export const RecipeIngredientList = (props: {
   const servingSize = ingredientProportionMap[url]?.proportion
 
   const onServingSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const ingList = ingredientProportionMap[url].ingredients.map((ing: ParsedIngredient) => ({
+    const ingList = ingredientProportionMap[url].ingredients?.map((ing: ParsedIngredient) => ({
       ...ing,
-      quantity: ing.quantity
+      scaledQuantity: ing.quantity
         ? ing.quantity * e.target.valueAsNumber
         : 0
     }));
@@ -33,7 +33,7 @@ export const RecipeIngredientList = (props: {
       [url]: {
         ...ingredientProportionMap[url],
         proportion: e.target.valueAsNumber,
-        ingredientsScaled: ingList
+        ingredients: ingList
       }
     });
   }
@@ -52,11 +52,11 @@ export const RecipeIngredientList = (props: {
 
       {recipeYield &&
         <h4>
-          {recipeYieldParsed?.quantity
-            ? recipeYieldParsed?.quantity * servingSize
-            : recipeYieldParsed?.quantity}
+          {recipeYieldParsed?.quantity && servingSize
+            ? recipeYieldParsed.quantity * servingSize
+            : servingSize}
           {` `}
-          {recipeYieldParsed?.description}
+          {recipeYieldParsed?.description || "serving(s)"}
         </h4>
       }
 

@@ -3,15 +3,16 @@ export interface ParsedIngredient {
   isGroupHeader: boolean;
   quantity: number | null;
   quantity2: number | null;
+  scaledQuantity?: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
+  unitOfMeasureType?: string | null;
 }
 
 export interface IngredientProportion {
-  ingredients: ParsedIngredient[];
-  ingredientsScaled: ParsedIngredient[];
-  proportion: number;
-  recipeYield: string | null;
+  ingredients?: ParsedIngredient[];
+  proportion?: number;
+  recipeYield?: string | null;
 }
 
 export type IngredientProportionObject = Record<string, IngredientProportion>;

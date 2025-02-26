@@ -1,15 +1,45 @@
-import React, { ChangeEventHandler } from "react";
+import React, { ChangeEvent } from "react";
 import { IngredientCheckbox } from "../interfaces/ingredient";
 import { Flipper, Flipped } from 'react-flip-toolkit'
 
 export const ShoppingIngredientList = (props: {
   ingredients: IngredientCheckbox[];
-  setChecked: ChangeEventHandler<HTMLInputElement>;
+  setIngredients: React.Dispatch<React.SetStateAction<IngredientCheckbox[]>>;
 }) => {
   const {
     ingredients,
-    setChecked
+    setIngredients
   } = props
+
+  const sortIngredients = (a: IngredientCheckbox, b: IngredientCheckbox) => {
+    if (!a.isChecked && b.isChecked) {
+      return -1;
+    } else if (!b.isChecked && a.isChecked) {
+      return 1;
+    } else return a.curOrder - b.curOrder;
+  }
+
+  const setChecked = (e: ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const isChecked = target.checked;
+    let newIng = ingredients;
+    const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
+
+    if (curOrder === null || curOrder === undefined) return;
+
+    const ing: IngredientCheckbox = ingredients[curOrder];
+
+    newIng.splice(curOrder, 1);
+    newIng = [...newIng,
+    {
+      ...ing,
+      isChecked: isChecked,
+      curOrder: isChecked ? curOrder : ing.listOrder
+    }].sort(sortIngredients);
+
+    setIngredients(newIng);
+  }
+
 
   return (
     <div className="left">

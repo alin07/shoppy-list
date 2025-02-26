@@ -1,17 +1,48 @@
+import { ParsedIngredient } from "../interfaces/ingredient";
+import { parseIngredient } from "parse-ingredient";
+import { Recipe } from "../interfaces/recipe";
+
 export const retrieveRecipe = async (url: string) => {
   try {
     const response = await fetch(`/api/recipe?url=${url}`);
     const data = await response.json();
     return data;
-  } catch (err) {
-    console.error('Error fetching recipe from site', err);
+  } catch (err: unknown) {
+    console.error("Error fetching recipe from site", err);
+    throw new Error((err as Error).message);
   }
-}
+};
 
 export const getValue = (p: string | string[] | undefined) => {
   if (!p) return null;
-  return Array.isArray(p) ? p[0] : p
-}
+  return Array.isArray(p) ? p[0] : p;
+};
+
+export const IMPERIAL = "imperial";
+export const METRIC = "metric";
+
+export const IMPERIAL_UNITS: Record<string, boolean> = {
+  // weight
+  ounce: true,
+  pound: true,
+  // capacity
+  pint: true,
+  quart: true,
+  gallon: true,
+  cup: true,
+  tablespoon: true,
+  teaspoon: true,
+};
+
+export const METRIC_UNITS: Record<string, boolean> = {
+  // capacity
+  liter: true,
+  milliliter: true,
+  // mass
+  gram: true,
+  milligram: true,
+  kilogram: true,
+};
 
 // converts from unit1 to unit2
 // export const unitConverter = (
@@ -24,11 +55,9 @@ export const getValue = (p: string | string[] | undefined) => {
 //   return null;
 // }
 
-
 // export const getMeasurementValue = (key: Measurement) => {
 //   return UNIT_OF_MEASUREMENTS[key]
 // }
-
 
 // const UNIT_OF_MEASUREMENTS: UnitOfMeasurements = {
 //   teaspoon: {
