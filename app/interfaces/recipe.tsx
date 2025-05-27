@@ -9,6 +9,7 @@ export interface RecipeLdJson2 {
 export type RecipeLdJson = Record<"@context", string>;
 
 export interface Recipe {
+  "@id"?: string;
   mainEntityOfPage: unknown;
   "@context"?: string;
   "@type"?: string;

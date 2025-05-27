@@ -1,13 +1,18 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, memo } from 'react';
 import { RecipeIngredientList } from './components/recipeIngredientList'
 import RecipeUrlInput from "./components/recipeUrlInput";
-import { RecipeUrl } from './interfaces/recipe';
+import { Recipe, RecipeUrl, ExtractedIngredient, IngredientProportion } from './interfaces/recipe';
 import { IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
 // import { setUpIngredientMap } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';
 import useFetchRecipeUrl from './hooks/useFetchRecipeUrl';
 import useIngredientsList from "./hooks/useIngredientsList"
+
+// Memoized components for better performance
+const MemoizedRecipeUrlInput = memo(RecipeUrlInput);
+const MemoizedShoppingIngredientList = memo(ShoppingIngredientList);
+const MemoizedRecipeIngredientList = memo(RecipeIngredientList);
 
 export default function Home() {
   const [recipe, setRecipe] = useState<string>("");
@@ -26,14 +31,17 @@ export default function Home() {
     ingredientProportionMap,
     setIngredientProportionMap,
     ingredients,
-    setIngredients
+    setIngredients,
+    keywordsMap
   } = useIngredientsList();
+
+  const labelMeasurements = useCallback((recipeData: Recipe) => labelMeasurementSystem(recipeData), []);
 
   console.log(loading, ingredients, ingredientProportionMap, recipeData);
 
-  const onChangeRecipe = (url: string) => {
+  const onChangeRecipeUrl = useCallback((url: string) => {
     setRecipe(url);
-  }
+  }, []);
 
   // useEffect(() => {
   //   if (recipe) {
@@ -59,10 +67,8 @@ export default function Home() {
   // }, [loading, recipeData])
 
   useEffect(() => {
-    // const ingredientMap: IngredientProportion = setUpIngredientMap(recipeData);
-
-
-    const url: string = recipeData.url
+    const ingredientMap: IngredientProportion = labelMeasurements(recipeData);
+    const url: string = recipeData.url;
 
     setIngredientProportionMap(map => ({
       ...map,
@@ -75,64 +81,60 @@ export default function Home() {
           ? { ...ru, isLoading: false, ldJson: recipeData }
           : ru
       ));
+  }, [labelMeasurements, recipeData, setIngredientProportionMap]);
 
-  }, [recipe, recipeData]);
-
-
-
-
-  const onRecipeUrlAdd = (url: string) => {
+  const onRecipeUrlAdd = useCallback((url: string) => {
     if (recipeUrls.some(ru => ru.url === url)) {
       setError("Recipe URL already in the list");
       setTimeout(() => setError(""), 5000);
+      return;
     }
     fetchRecipeData(url);
     setRecipe("");
-  }
+  }, [recipeUrls, setError, fetchRecipeData]);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="w-full flex flex-col row-start-2  sm:items-start">
         <h1 className="text-4xl mb-4">Shoppy List</h1>
         <div className="w-full mb-4">
-          <RecipeUrlInput
+          <MemoizedRecipeUrlInput
             url={recipe}
-            onUrlChange={onChangeRecipe}
+            onUrlChange={onChangeRecipeUrl}
             onSubmitUrl={() => onRecipeUrlAdd(recipe)}
             error={error}
           />
         </div>
 
         <div className="flex w-full justify-between">
-          <ShoppingIngredientList
-            ingredients={ingredients}
-            setIngredients={setIngredients}
+          <MemoizedShoppingIngredientList
+            ingredients={keywordsMap}
+          // setIngredients={setIngredients}
           />
           <div className="right">
             <div>
-              {
-                recipeUrls.map(recipe =>
-                  <div key={recipe.url} className="mb-4">
-                    <div className="flex items-center space-x-4">
-                      {loading &&
-                        <div>
-                          <a href={recipe.url}>
-                            {recipe.url}
-                          </a>
-                          <p>Loading...</p>
-                        </div>}
-                    </div>
-                    {!recipe.isLoading && recipe.ldJson && (
-                      <RecipeIngredientList
-                        url={recipe.url}
-                        recipeItems={recipe.ldJson}
-                        ingredientProportionMap={ingredientProportionMap}
-                        setIngredientProportionMap={setIngredientProportionMap}
-                      />
+              {recipeUrls.map(recipe => (
+                <div key={recipe.url} className="mb-4">
+                  <div className="flex items-center space-x-4">
+                    {loading && (
+                      <div>
+                        <a href={recipe.url} className="text-blue-600 hover:text-blue-800">
+                          {recipe.url}
+                        </a>
+                        <p className="text-gray-600">Loading...</p>
+                      </div>
                     )}
                   </div>
-                )
-              }
+                  {!recipe.isLoading && recipe.ldJson && (
+                    <MemoizedRecipeIngredientList
+                      url={recipe.url}
+                      recipeItems={recipe.ldJson}
+                      ingredientProportionMap={ingredientProportionMap}
+                      setIngredientProportionMap={setIngredientProportionMap}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -143,3 +145,5 @@ export default function Home() {
     </div>
   );
 }
+
+

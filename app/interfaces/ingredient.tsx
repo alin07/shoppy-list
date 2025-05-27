@@ -1,4 +1,5 @@
-export interface ParsedIngredient {
+// ingredients extracted and then parsed by nlp
+export interface ExtractedIngredient {
   description: string;
   isGroupHeader: boolean;
   quantity: number | null;
@@ -9,11 +10,29 @@ export interface ParsedIngredient {
   unitOfMeasureType?: string | null;
 }
 
+export interface ParsedIngredient {
+  keyword?: string | null;
+  description: string;
+  quantity: number | null;
+  unitOfMeasure: string | null;
+  unitOfMeasureID: string | null;
+  unitOfMeasureType?: string | null;
+  isChecked: boolean;
+  origOrder: number;
+  curOrder: number;
+  recipeUrl: string | null;
+}
+
+export interface KeywordIngredients {
+  [key: string]: ParsedIngredient[];
+}
+
 export interface IngredientProportion {
   ingredients?: ParsedIngredient[];
   proportion?: number;
   recipeYield?: string | null;
 }
+
 
 export type IngredientProportionObject = Record<string, IngredientProportion>;
 

@@ -1,17 +1,17 @@
-import React, { ChangeEvent } from "react";
-import { IngredientCheckbox } from "../interfaces/ingredient";
+import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
+import { IngredientProportion, ParsedIngredient, KeywordIngredients } from "../interfaces/ingredient";
 import { Flipper, Flipped } from 'react-flip-toolkit'
 
 export const ShoppingIngredientList = (props: {
-  ingredients: IngredientCheckbox[];
-  setIngredients: React.Dispatch<React.SetStateAction<IngredientCheckbox[]>>;
+  ingredients: IngredientProportion;
+  setKeywordsMap: Dispatch<SetStateAction<KeywordIngredients>>;
 }) => {
   const {
     ingredients,
-    setIngredients
+    setKeywordsMap
   } = props
 
-  const sortIngredients = (a: IngredientCheckbox, b: IngredientCheckbox) => {
+  const sortIngredients = (a: ParsedIngredient, b: ParsedIngredient) => {
     if (!a.isChecked && b.isChecked) {
       return -1;
     } else if (!b.isChecked && a.isChecked) {
@@ -22,12 +22,19 @@ export const ShoppingIngredientList = (props: {
   const setChecked = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
     const isChecked = target.checked;
-    let newIng = ingredients;
-    const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
+    // let newIng = ingredients;
+    // const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
 
-    if (curOrder === null || curOrder === undefined) return;
+    // if (curOrder === null || curOrder === undefined) return;
 
-    const ing: IngredientCheckbox = ingredients[curOrder];
+    // find the ingredient in the keywordsMap
+    const ingredient = Object.values(ingredients).find(i => i.name === target.value);
+    // update ingredient's isChecked property
+    const updatedIngredient = { ...ingredient, isChecked: isChecked };
+    // update the keywordsMap
+    setKeywordsMap({ ...ingredients, [ingredient.keyword]: [...ingredients[ingredient.keyword], updatedIngredient] });
+
+    const ing: ParsedIngredient = ingredients[curOrder];
 
     newIng.splice(curOrder, 1);
     newIng = [...newIng,
@@ -36,8 +43,8 @@ export const ShoppingIngredientList = (props: {
       isChecked: isChecked,
       curOrder: isChecked ? curOrder : ing.listOrder
     }].sort(sortIngredients);
-
-    setIngredients(newIng);
+    setKeywordsMap(newIng);
+    // setIngredients(newIng);
   }
 
 
