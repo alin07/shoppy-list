@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 
-function Accordion(props: { title: any; content: any; }) {
+function Accordion(props: { title: ReactNode; content: ReactNode; }) {
   const { title, content } = props
   const [expanded, setExpanded] = useState(false)
   const toggleExpanded = () => setExpanded((current) => !current)

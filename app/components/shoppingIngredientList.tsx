@@ -22,13 +22,36 @@ export const ShoppingIngredientList = (props: {
   // }
 
   const setCheckedKeyword = (e: ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked, id = e.target.id;
+    const keywordIngredient = keywordsMap[id],
+      ingredients = keywordIngredient.ingredients.map((i: ParsedIngredient) => ({
+        ...i,
+        isChecked: isChecked
+      }));
 
+    setKeywordsMap({
+      ...keywordsMap,
+      [id]: {
+        ...keywordIngredient,
+        ingredients,
+        isChecked
+      }
+    })
   }
 
   const setChecked = (e: ChangeEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    const isChecked = target.checked;
-
+    const isChecked = e.target.checked, id = e.target.id.split(" - ");
+    const keywordIngredient = keywordsMap[id[0]],
+      ingredients = keywordIngredient.ingredients.map((i: ParsedIngredient) => (
+        i.description === id[1]
+          ?
+          {
+            ...i,
+            isChecked: isChecked
+          }
+          : i
+      ));
+    console.log(isChecked, id, ingredients)
     // let newIng = ingredients;
     // const curOrder: number | undefined = ingredients.findIndex(i => i.name === target.value);
 

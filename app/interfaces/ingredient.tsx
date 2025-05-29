@@ -44,13 +44,8 @@ export type KeywordIngredients = {
   [keyword: string]: KeywordIngredient
 }
 
-type UnitType = "mass" | "volume";
+export type Conversion = Record<string, number>;
 
-export interface UnitDefinition {
-  type: UnitType;
-  toBase: number; // multiplier to convert to base unit
-  fromBase: number; // multiplier from base unit to this unit
-}
 
 export type ConversionOption = {
   [unit: string]: { quantity: number }

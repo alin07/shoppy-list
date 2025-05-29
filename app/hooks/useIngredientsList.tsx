@@ -7,17 +7,25 @@ import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, convertToAllUnits } fro
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   // "black", "white", "red", "yellow", "green",
-  "minced", "smashed", "extra-virgin", "extra virgin",
-  "or", "freshly", "ground", "kosher", "fresh", "frozen", "dried", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for serving", "to serve"
+  "minced", "smashed", "extra-virgin", "extra", "virgin",
+  "freshly", "ground", "kosher", "fresh", "frozen", "dried", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve"
+]);
+const KEYWORD_ENDINGS_TO_REMOVE = new Set([
+  "and", "or"
 ]);
 
 const getIngredientKeyword = (ingredient: string): string => {
-  return ingredient
-    .replace(/ *\([^)]*\) */g, "")
-    .split(" ")
-    .map(i => i.replace(/^\s*,+\s*|\s*,+\s*$/g, ''))
-    .filter(word => word && !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()))
-    .join(" ");
+  const ing =
+    ingredient
+      .replace(/ *\([^)]*\) */g, "")
+      .split(" ")
+      .map(i => i.replace(/^\s*,+\s*|\s*,+\s*$/g, ''))
+      .filter(word => word && !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()));
+
+  if (KEYWORD_ENDINGS_TO_REMOVE.has(ing[ing.length - 1])) {
+    ing.pop();
+  }
+  return ing.join(" ");
 };
 
 const useIngredientsList = () => {
@@ -79,24 +87,24 @@ const useIngredientsList = () => {
             }
 
         const consolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
-          if (Object.keys(accum).length < 1) {
-            return (
-              {
-                quantity: val.quantity,
-                measurementSystem: val.measurementSystem,
-                unitOfMeasure: val.unitOfMeasure,
-                unitOfMeasureID: val.unitOfMeasureID,
-                ingredient: keyword
-              }
-            )
+          if (accum.quantity == -1) {
+            return ({
+              quantity: val.quantity || 0,
+              measurementSystem: val.measurementSystem,
+              unitOfMeasure: val.unitOfMeasure,
+              unitOfMeasureID: val.unitOfMeasureID,
+              ingredient: keyword
+            })
           } else {
-
             const prevMeasurementSystem = accum.measurementSystem,
               prevUnitOfMeasureID = accum.unitOfMeasureID,
               prevQuantity = accum.quantity;
             let quantity = prevQuantity;
             if (prevMeasurementSystem !== val.measurementSystem || prevUnitOfMeasureID !== val.unitOfMeasureID) {
-              quantity = convertToAllUnits(val?.quantity, val.unitOfMeasureID, prevUnitOfMeasureID) + prevQuantity;
+              const newQuantity = convertToAllUnits(val?.quantity, val.unitOfMeasureID, prevUnitOfMeasureID);
+              quantity += newQuantity || 0;
+            } else {
+              quantity += val.quantity || 0;
             }
 
             return ({
@@ -104,15 +112,22 @@ const useIngredientsList = () => {
               quantity
             });
           }
-        }, {}) || { quantity: null };
+        }, {
+          quantity: -1,
+          measurementSystem: null,
+          unitOfMeasure: null,
+          unitOfMeasureID: null,
+          ingredient: keyword
+        }) || { quantity: null };
 
-        const keywordIngs = keywords[keyword]?.ingredients || [];
+        const keywordIngs = (keywords as KeywordIngredients)[keyword]?.ingredients || [];
+        console.log("consolidatedIngredient", consolidatedIngredient)
         keywords = {
           ...keywords,
           [keyword]: {
             ...baseKeywordIngredientData,
             ingredients: [...keywordIngs, transformed],
-            quantity: consolidatedIngredient?.quantity || null
+            quantity: consolidatedIngredient?.quantity ?? null
           }
         }
         console.log("keywords", keywords);
