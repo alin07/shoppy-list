@@ -14,6 +14,14 @@ export interface ExtractedIngredient {
   measurementSystem: measurementSystem;
 }
 
+export type ConsolidatedIngredient = {
+  keyword: string | null;
+  quantity: number | null;
+  unitOfMeasure: string | null;
+  unitOfMeasureID: string | null;
+  measurementSystem: measurementSystem;
+}
+
 export interface ParsedIngredient {
   keyword?: string | null;
   description: string;
@@ -22,8 +30,6 @@ export interface ParsedIngredient {
   unitOfMeasureID: string | null;
   measurementSystem: measurementSystem;
   isChecked: boolean;
-  origOrder: number;
-  curOrder: number;
   recipeUrl: string | null;
   recipeTitle: string;
 }
@@ -36,8 +42,6 @@ export type KeywordIngredient =
     unitOfMeasure: string | null;
     unitOfMeasureID: string | null;
     measurementSystem: measurementSystem;
-    origOrder: number;
-    curOrder: number;
   };
 
 export type KeywordIngredients = {

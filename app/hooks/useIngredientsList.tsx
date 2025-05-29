@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { KeywordIngredients, KeywordIngredient, IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
+import { KeywordIngredients, KeywordIngredient, IngredientProportionObject, ParsedIngredient, ConsolidatedIngredient } from "../interfaces/ingredient";
 import { parseIngredient } from "parse-ingredient";
 import { Recipe } from "../interfaces/recipe";
 import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, convertToAllUnits } from "../utils/ingredients";
@@ -62,8 +62,6 @@ const useIngredientsList = () => {
           unitOfMeasure: parsed.unitOfMeasure,
           unitOfMeasureID: parsed.unitOfMeasureID,
           isChecked: false,
-          origOrder: ind,
-          curOrder: ind,
           keyword,
           measurementSystem: unitOfMeasureType,
           recipeTitle: recipeData?.name || ""
@@ -79,27 +77,34 @@ const useIngredientsList = () => {
               isChecked: false,
               ingredients: [transformed],
               quantity: transformed.quantity || 0,
-              origOrder: ind,
-              curOrder: ind,
               measurementSystem: unitOfMeasureType,
               unitOfMeasure: transformed.unitOfMeasure,
               unitOfMeasureID: transformed.unitOfMeasureID,
             }
 
-        const consolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
+        const initialConsolidatedIng: ConsolidatedIngredient = {
+          keyword,
+          quantity: -1,
+          measurementSystem: null,
+          unitOfMeasure: null,
+          unitOfMeasureID: null,
+        };
+
+        const consolidatedIngredient: ConsolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
           if (accum.quantity == -1) {
             return ({
               quantity: val.quantity || 0,
               measurementSystem: val.measurementSystem,
               unitOfMeasure: val.unitOfMeasure,
               unitOfMeasureID: val.unitOfMeasureID,
-              ingredient: keyword
+              keyword
             })
           } else {
             const prevMeasurementSystem = accum.measurementSystem,
               prevUnitOfMeasureID = accum.unitOfMeasureID,
-              prevQuantity = accum.quantity;
+              prevQuantity = accum.quantity || 0;
             let quantity = prevQuantity;
+
             if (prevMeasurementSystem !== val.measurementSystem || prevUnitOfMeasureID !== val.unitOfMeasureID) {
               const newQuantity = convertToAllUnits(val?.quantity, val.unitOfMeasureID, prevUnitOfMeasureID);
               quantity += newQuantity || 0;
@@ -112,13 +117,7 @@ const useIngredientsList = () => {
               quantity
             });
           }
-        }, {
-          quantity: -1,
-          measurementSystem: null,
-          unitOfMeasure: null,
-          unitOfMeasureID: null,
-          ingredient: keyword
-        }) || { quantity: null };
+        }, initialConsolidatedIng) || initialConsolidatedIng;
 
         const keywordIngs = (keywords as KeywordIngredients)[keyword]?.ingredients || [];
         console.log("consolidatedIngredient", consolidatedIngredient)
@@ -127,7 +126,7 @@ const useIngredientsList = () => {
           [keyword]: {
             ...baseKeywordIngredientData,
             ingredients: [...keywordIngs, transformed],
-            quantity: consolidatedIngredient?.quantity ?? null
+            quantity: consolidatedIngredient?.quantity || 0
           }
         }
         console.log("keywords", keywords);
