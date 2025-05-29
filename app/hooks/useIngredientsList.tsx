@@ -1,18 +1,22 @@
-import { useEffect, useState } from "react"
-import { KeywordIngredients, IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
+import { useState } from "react"
+import { KeywordIngredients, KeywordIngredient, IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
 import { parseIngredient } from "parse-ingredient";
 import { Recipe } from "../interfaces/recipe";
-import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, getValue } from "../utils/ingredients";
+import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, convertToAllUnits } from "../utils/ingredients";
+
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
-  "or", "black", "white", "red", "yellow", "green", "freshly", "ground", "kosher", "fresh", "frozen", "dried", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch"
+  // "black", "white", "red", "yellow", "green",
+  "minced", "smashed", "extra-virgin", "extra virgin",
+  "or", "freshly", "ground", "kosher", "fresh", "frozen", "dried", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for serving", "to serve"
 ]);
 
 const getIngredientKeyword = (ingredient: string): string => {
   return ingredient
     .replace(/ *\([^)]*\) */g, "")
     .split(" ")
-    .filter(word => word && !INGREDIENT_KEYWORDS_TO_REMOVE.has(word))
+    .map(i => i.replace(/^\s*,+\s*|\s*,+\s*$/g, ''))
+    .filter(word => word && !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()))
     .join(" ");
 };
 
@@ -20,19 +24,20 @@ const useIngredientsList = () => {
   const [ingredientProportionMap, setIngredientProportionMap] = useState<IngredientProportionObject>({});
   const [ingredients, setIngredients] = useState<KeywordIngredients>({});
   const [keywordsMap, setKeywordsMap] = useState<KeywordIngredients>({});
-  // const keywordsMap = useMemo(() => new Map(), []);
 
-  // TODO: should be renamed to something else -> this function gets extracted ing and transforms it to parsedIngredient. It also sets up keyword map while looping through extracted ingredients
-  const labelMeasurementSystem = (recipeData: Recipe) => {
+  let keywords = {}
+
+  const extractIngredient = (recipeData: Recipe) => {
     const recipeIng: string[] = recipeData?.recipeIngredient || [];
     const parsedIngredients: ParsedIngredient[] = [];
+    console.log(recipeIng)
 
     for (let ind = 0; ind < recipeIng.length; ind++) {
       try {
         const parsed = parseIngredient(recipeIng[ind])[0];
         if (!parsed) continue;
 
-        const keyword = getIngredientKeyword(parsed.description);
+        const keyword: string = getIngredientKeyword(parsed.description);
         const recipeUrl = recipeData.url;
 
         let unitOfMeasureType: 'imperial' | 'metric' | null = null;
@@ -52,94 +57,76 @@ const useIngredientsList = () => {
           origOrder: ind,
           curOrder: ind,
           keyword,
-          unitOfMeasureType: unitOfMeasureType || undefined
+          measurementSystem: unitOfMeasureType,
+          recipeTitle: recipeData?.name || ""
         };
 
         parsedIngredients.push(transformed);
-        const existingIngredients = keywordsMap[keyword] || [];
-        setKeywordsMap({ ...keywordsMap, [keyword]: [...existingIngredients, transformed] })
+        const keywordData = keywordsMap[keyword];
+        const baseKeywordIngredientData: KeywordIngredient =
+          keywordData?.unitOfMeasure
+            ? keywordData
+            :
+            {
+              isChecked: false,
+              ingredients: [transformed],
+              quantity: transformed.quantity || 0,
+              origOrder: ind,
+              curOrder: ind,
+              measurementSystem: unitOfMeasureType,
+              unitOfMeasure: transformed.unitOfMeasure,
+              unitOfMeasureID: transformed.unitOfMeasureID,
+            }
 
+        const consolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
+          if (Object.keys(accum).length < 1) {
+            return (
+              {
+                quantity: val.quantity,
+                measurementSystem: val.measurementSystem,
+                unitOfMeasure: val.unitOfMeasure,
+                unitOfMeasureID: val.unitOfMeasureID,
+                ingredient: keyword
+              }
+            )
+          } else {
+
+            const prevMeasurementSystem = accum.measurementSystem,
+              prevUnitOfMeasureID = accum.unitOfMeasureID,
+              prevQuantity = accum.quantity;
+            let quantity = prevQuantity;
+            if (prevMeasurementSystem !== val.measurementSystem || prevUnitOfMeasureID !== val.unitOfMeasureID) {
+              quantity = convertToAllUnits(val?.quantity, val.unitOfMeasureID, prevUnitOfMeasureID) + prevQuantity;
+            }
+
+            return ({
+              ...accum,
+              quantity
+            });
+          }
+        }, {}) || { quantity: null };
+
+        const keywordIngs = keywords[keyword]?.ingredients || [];
+        keywords = {
+          ...keywords,
+          [keyword]: {
+            ...baseKeywordIngredientData,
+            ingredients: [...keywordIngs, transformed],
+            quantity: consolidatedIngredient?.quantity || null
+          }
+        }
+        console.log("keywords", keywords);
       } catch (error) {
         console.error('Error parsing ingredient:', error, recipeIng[ind]);
       }
     }
 
-    const recipeYield = typeof recipeData?.recipeYield === 'string' ? getValue(recipeData.recipeYield) : 0;
-
-    return {
-      proportion: 1,
-      recipeYield,
-      ingredients: parsedIngredients,
-    };
+    setKeywordsMap((ki) => ({ ...ki, ...keywords }));
   };
 
-  /**
-   * returns the list of ingredients unders shopping list
-   */
-  useEffect(() => {
-    // takes the ingredient object (ingredientProportionMap) and turns it into a list that's sorted, filtered and grouped by same ingredients
-    // whenever ingredientProportionMap gets updated, re-sort/filter/group the ingredient list
-
-    // const updateIngredientList = () => {
-    //   try {
-
-    // const condensedIngredients = Object.entries(keywordsMap).reduce((acc, [, ingredient]) => {
-
-
-
-    // }, {});
-
-    // console.log("condensedIngredients", condensedIngredients);
-
-    // const updatedIngObj: IngredientMap = Object.entries(ingredientProportionMap).reduce((acc, [, ingredient]) => {
-    //   const ingredientsMap: IngredientMap = {};
-
-    //   console.log("ingredient", ingredient);
-
-    //   ingredient.ingredients?.forEach((ing) => {
-    //     if (ing.quantity === 0) return;
-
-    //     const currentIng = acc[ing.description];
-    //     const ingAmt = {
-    //       quantity: ing.quantity || 0,
-    //       unit: ing.unitOfMeasure || ""
-    //     };
-
-    //     if (currentIng) {
-    //       if (ingAmt.unit === currentIng.unit) {
-    //         ingAmt.quantity += currentIng.quantity;
-    //       }
-    //       // TODO: Implement unit conversion for different units
-    //     }
-
-    //     ingredientsMap[ing.description] = ingAmt;
-    //   });
-
-    //   return { ...acc, ...ingredientsMap };
-    // }, {} as IngredientMap);
-
-    // const ingArr = Object.entries(updatedIngObj).map(([name, details], index) => ({
-    //   name: `${details.quantity === 0 ? "" : details.quantity + " "}${details.unit + " "}${name}`.trim(),
-    //   isChecked: false,
-    //   listOrder: index,
-    //   curOrder: index
-    // }));
-
-    // setIngredients(keywordsMap);
-    // } catch (error) {
-    //   console.error('Error updating ingredient list:', error);
-    // }
-    // };
-
-    // updateIngredientList();
-  }, [keywordsMap]);
-
-  // useEffect(() => {
-  //   console.log("keywordsMap", keywordsMap);
-  // }, [keywordsMap]);
 
   return {
-    labelMeasurementSystem,
+    extractIngredient,
     ingredientProportionMap,
     setIngredientProportionMap,
     ingredients,

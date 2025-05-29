@@ -1,6 +1,4 @@
-import { ParsedIngredient } from "../interfaces/ingredient";
-import { parseIngredient } from "parse-ingredient";
-import { Recipe } from "../interfaces/recipe";
+import { UnitDefinition } from "../interfaces/ingredient";
 
 export const retrieveRecipe = async (url: string) => {
   try {
@@ -44,141 +42,45 @@ export const METRIC_UNITS: Record<string, boolean> = {
   kilogram: true,
 };
 
-// converts from unit1 to unit2
-// export const unitConverter = (
-//   amt1: number,
-//   unit1: Measurement,
-//   amt2: number,
-//   unit2: Measurement
-// ) => {
-//   console.log(UNIT_OF_MEASUREMENTS[unit2], amt1, amt2, unit1, unit2);
-//   return null;
-// }
 
-// export const getMeasurementValue = (key: Measurement) => {
-//   return UNIT_OF_MEASUREMENTS[key]
-// }
+export const UNIT_DEFINITIONS: Record<string, UnitDefinition> = {
+  // Volume (base: milliliter)
+  teaspoon: { type: "volume", toBase: 4.92892, fromBase: 1 / 4.92892 },
+  tablespoon: { type: "volume", toBase: 14.7868, fromBase: 1 / 14.7868 },
+  cup: { type: "volume", toBase: 240, fromBase: 1 / 240 },
+  pint: { type: "volume", toBase: 473.176, fromBase: 1 / 473.176 },
+  quart: { type: "volume", toBase: 946.353, fromBase: 1 / 946.353 },
+  gallon: { type: "volume", toBase: 3785.41, fromBase: 1 / 3785.41 },
+  milliliter: { type: "volume", toBase: 1, fromBase: 1 },
+  liter: { type: "volume", toBase: 1000, fromBase: 1 / 1000 },
 
-// const UNIT_OF_MEASUREMENTS: UnitOfMeasurements = {
-//   teaspoon: {
-//     mililiter: {
-//       quantity: 5
-//     }
-//   },
-//   tablespoon: {
-//     teaspoon: {
-//       quantity: 3
-//     },
-//     mililiter: {
-//       quantity: 15
-//     }
-//   },
-//   cup: {
-//     "fluid ounce": {
-//       quantity: 8
-//     },
-//     tablespoon: {
-//       quantity: 16
-//     },
-//     mililiter: {
-//       quantity: 250
-//     }
-//   },
-//   pint: {
-//     cup: {
-//       quantity: 2
-//     },
-//     "fluid ounce": {
-//       quantity: 16
-//     },
-//     tablespoon: {
-//       quantity: 32
-//     },
-//     mililiter: {
-//       quantity: 500
-//     }
-//   },
-//   quart: {
-//     pint: {
-//       quantity: 2
-//     },
-//     cup: {
-//       quantity: 4
-//     },
-//     "fluid ounce": {
-//       quantity: 32
-//     },
-//     tablespoon: {
-//       quantity: 64
-//     },
-//     mililiter: {
-//       quantity: 946.353
-//     },
-//     liter: {
-//       quantity: 1.1
-//     }
-//   },
-//   gallon: {
-//     quart: {
-//       quantity: 4
-//     },
-//     pint: {
-//       quantity: 8
-//     },
-//     cup: {
-//       quantity: 16
-//     },
-//     "fluid ounce": {
-//       quantity: 128
-//     },
-//     tablespoon: {
-//       quantity: 256
-//     },
-//     mililiter: {
-//       quantity: 3785.41
-//     },
-//     liter: {
-//       quantity: 3.78541
-//     }
-//   },
-//   ounce: {
-//     gram: {
-//       quantity: 28
-//     }
-//   },
-//   "fluid ounce": {
-//     tablespoon: {
-//       quantity: 2
-//     },
-//     cups: {
-//       quantity: 0.125
-//     },
-//     mililiter: {
-//       quantity: 30
-//     }
-//   },
-//   pound: {
-//     ounce: {
-//       quantity: 16
-//     },
-//     gram: {
-//       quantity: 450
-//     }
-//   }
-// }
+  // Mass (base: gram)
+  ounce: { type: "mass", toBase: 28.3495, fromBase: 1 / 28.3495 },
+  pound: { type: "mass", toBase: 453.592, fromBase: 1 / 453.592 },
+  milligram: { type: "mass", toBase: 0.001, fromBase: 1 / 0.001 },
+  gram: { type: "mass", toBase: 1, fromBase: 1 },
+  kilogram: { type: "mass", toBase: 1000, fromBase: 1 / 1000 },
+};
 
-// export type Measurements = Record<string, number>;
-// export type ParentMeasurement = Record<string, Measurements>;
-// export interface UnitOfMeasurements {
-//   teaspoon: Measurements | ParentMeasurement;
-//   tablespoon: Measurements | ParentMeasurement;
-//   cup: Measurements | ParentMeasurement;
-//   pint: Measurements | ParentMeasurement;
-//   quart: Measurements | ParentMeasurement;
-//   gallon: Measurements | ParentMeasurement;
-//   ounce: Measurements | ParentMeasurement;
-//   "fluid ounce": Measurements | ParentMeasurement;
-//   pound: Measurements | ParentMeasurement;
-// }
+/**
+ * Converts a quantity from one unit into another unit (mass or volume).
+ */
+export function convertToAllUnits(
+  quantity: number | null,
+  fromUnit: string | null,
+  toUnit: string | null
+): number | null {
 
-// type Measurement = keyof UnitOfMeasurements;
+  if (!quantity || !fromUnit || toUnit) return null;
+
+  const fromDef = UNIT_DEFINITIONS[fromUnit], toDef = UNIT_DEFINITIONS[toUnit];
+
+  if (!fromDef || !toDef) {
+    console.warn(`Unsupported conversion input: ${fromUnit} to ${toUnit}`);
+    return null;
+  }
+
+  const baseQuantity = quantity * fromDef.toBase;
+  const converted = baseQuantity * toDef.fromBase;
+  return parseFloat(converted.toFixed(2));
+}

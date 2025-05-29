@@ -1,4 +1,8 @@
+import { IMPERIAL, METRIC } from "../utils/ingredients"
 // ingredients extracted and then parsed by nlp
+
+export type measurementSystem = typeof IMPERIAL | typeof METRIC | null;
+
 export interface ExtractedIngredient {
   description: string;
   isGroupHeader: boolean;
@@ -7,7 +11,7 @@ export interface ExtractedIngredient {
   scaledQuantity?: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
-  unitOfMeasureType?: string | null;
+  measurementSystem: measurementSystem;
 }
 
 export interface ParsedIngredient {
@@ -16,15 +20,40 @@ export interface ParsedIngredient {
   quantity: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
-  unitOfMeasureType?: string | null;
+  measurementSystem: measurementSystem;
   isChecked: boolean;
   origOrder: number;
   curOrder: number;
   recipeUrl: string | null;
+  recipeTitle: string;
 }
 
-export interface KeywordIngredients {
-  [key: string]: ParsedIngredient[];
+export type KeywordIngredient =
+  {
+    isChecked: boolean;
+    ingredients: ParsedIngredient[];
+    quantity: number,
+    unitOfMeasure: string | null;
+    unitOfMeasureID: string | null;
+    measurementSystem: measurementSystem;
+    origOrder: number;
+    curOrder: number;
+  };
+
+export type KeywordIngredients = {
+  [keyword: string]: KeywordIngredient
+}
+
+type UnitType = "mass" | "volume";
+
+export interface UnitDefinition {
+  type: UnitType;
+  toBase: number; // multiplier to convert to base unit
+  fromBase: number; // multiplier from base unit to this unit
+}
+
+export type ConversionOption = {
+  [unit: string]: { quantity: number }
 }
 
 export interface IngredientProportion {

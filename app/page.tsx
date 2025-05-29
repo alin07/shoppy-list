@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useCallback, useEffect, memo } from 'react';
-import { RecipeIngredientList } from './components/recipeIngredientList'
+// import { RecipeIngredientList } from './components/recipeIngredientList'
 import RecipeUrlInput from "./components/recipeUrlInput";
-import { Recipe, RecipeUrl, ExtractedIngredient, IngredientProportion } from './interfaces/recipe';
-import { IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
+import { Recipe, RecipeUrl } from './interfaces/recipe';
+// import { IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
 // import { setUpIngredientMap } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';
 import useFetchRecipeUrl from './hooks/useFetchRecipeUrl';
@@ -11,8 +11,8 @@ import useIngredientsList from "./hooks/useIngredientsList"
 
 // Memoized components for better performance
 const MemoizedRecipeUrlInput = memo(RecipeUrlInput);
-const MemoizedShoppingIngredientList = memo(ShoppingIngredientList);
-const MemoizedRecipeIngredientList = memo(RecipeIngredientList);
+// const MemoizedShoppingIngredientList = memo(ShoppingIngredientList);
+// const MemoizedRecipeIngredientList = memo(RecipeIngredientList);
 
 export default function Home() {
   const [recipe, setRecipe] = useState<string>("");
@@ -27,17 +27,16 @@ export default function Home() {
   } = useFetchRecipeUrl();
 
   const {
-    labelMeasurementSystem,
-    ingredientProportionMap,
-    setIngredientProportionMap,
-    ingredients,
-    setIngredients,
-    keywordsMap
+    extractIngredient,
+    // ingredientProportionMap,
+    // setIngredientProportionMap,
+    keywordsMap,
+    setKeywordsMap
   } = useIngredientsList();
 
-  const labelMeasurements = useCallback((recipeData: Recipe) => labelMeasurementSystem(recipeData), []);
+  const extractIngredients = useCallback((recipeData: Recipe) => extractIngredient(recipeData), []);
 
-  console.log(loading, ingredients, ingredientProportionMap, recipeData);
+  // console.log(loading, ingredients, ingredientProportionMap, recipeData);
 
   const onChangeRecipeUrl = useCallback((url: string) => {
     setRecipe(url);
@@ -67,13 +66,13 @@ export default function Home() {
   // }, [loading, recipeData])
 
   useEffect(() => {
-    const ingredientMap: IngredientProportion = labelMeasurements(recipeData);
     const url: string = recipeData.url;
 
-    setIngredientProportionMap(map => ({
-      ...map,
-      [url]: ingredientMap
-    }));
+    // setIngredientProportionMap(map => ({
+    //   ...map,
+    //   [url]: ingredientMap
+    // }));
+    extractIngredients(recipeData);
 
     setRecipeUrls((prevUrls) =>
       prevUrls.map((ru: RecipeUrl) =>
@@ -81,7 +80,7 @@ export default function Home() {
           ? { ...ru, isLoading: false, ldJson: recipeData }
           : ru
       ));
-  }, [labelMeasurements, recipeData, setIngredientProportionMap]);
+  }, [extractIngredients, recipeData]);
 
   const onRecipeUrlAdd = useCallback((url: string) => {
     if (recipeUrls.some(ru => ru.url === url)) {
@@ -107,9 +106,9 @@ export default function Home() {
         </div>
 
         <div className="flex w-full justify-between">
-          <MemoizedShoppingIngredientList
-            ingredients={keywordsMap}
-          // setIngredients={setIngredients}
+          <ShoppingIngredientList
+            keywordsMap={keywordsMap}
+            setKeywordsMap={setKeywordsMap}
           />
           <div className="right">
             <div>
@@ -125,14 +124,14 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  {!recipe.isLoading && recipe.ldJson && (
+                  {/* {!recipe.isLoading && recipe.ldJson && (
                     <MemoizedRecipeIngredientList
                       url={recipe.url}
                       recipeItems={recipe.ldJson}
                       ingredientProportionMap={ingredientProportionMap}
                       setIngredientProportionMap={setIngredientProportionMap}
                     />
-                  )}
+                  )} */}
                 </div>
               ))}
             </div>
