@@ -86,7 +86,7 @@ export default function Home() {
                     )}
                   </div>
                   {/* {!recipe.isLoading && recipe.ldJson && (
-                    <MemoizedRecipeIngredientList
+                    <RecipeIngredientList
                       url={recipe.url}
                       recipeItems={recipe.ldJson}
                       ingredientProportionMap={ingredientProportionMap}
