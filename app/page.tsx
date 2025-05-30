@@ -1,18 +1,10 @@
 "use client";
-import React, { useState, useEffect, memo } from 'react';
-// import { RecipeIngredientList } from './components/recipeIngredientList'
-import RecipeUrlInput from "./components/recipeUrlInput";
+import React, { useState, useEffect } from 'react';
+import RecipeUrlInput from './components/recipeUrlInput';
 import { RecipeUrl } from './interfaces/recipe';
-// import { IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
-// import { setUpIngredientMap } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';
 import useFetchRecipeUrl from './hooks/useFetchRecipeUrl';
-import useIngredientsList from "./hooks/useIngredientsList"
-
-// Memoized components for better performance
-const MemoizedRecipeUrlInput = memo(RecipeUrlInput);
-// const MemoizedShoppingIngredientList = memo(ShoppingIngredientList);
-// const MemoizedRecipeIngredientList = memo(RecipeIngredientList);
+import useIngredientsList from './hooks/useIngredientsList';
 
 export default function Home() {
   const [recipe, setRecipe] = useState<string>("");
@@ -28,20 +20,13 @@ export default function Home() {
 
   const {
     extractIngredients,
-    // ingredientProportionMap,
-    // setIngredientProportionMap,
     keywordsMap,
     setKeywordsMap
   } = useIngredientsList();
 
-  // const extractIngredients = useCallback((recipeData: Recipe) => extractIngredient(recipeData), []);
-
-  // console.log(loading, ingredients, ingredientProportionMap, recipeData);
-
   const onChangeRecipeUrl = (url: string) => {
     setRecipe(url);
   };
-
 
   useEffect(() => {
     const url: string = recipeData?.url || "";
@@ -49,14 +34,13 @@ export default function Home() {
     if (recipeData)
       extractIngredients(recipeData);
 
-
     setRecipeUrls((prevUrls) =>
       prevUrls.map((ru: RecipeUrl) =>
         ru.url === url
           ? { ...ru, isLoading: false, ldJson: recipeData }
           : ru
       ));
-  }, [recipeData, extractIngredients]);
+  }, [recipeData]);
 
   const onRecipeUrlAdd = (url: string) => {
     if (recipeUrls.some(ru => ru.url === url)) {
@@ -73,7 +57,7 @@ export default function Home() {
       <main className="w-full flex flex-col row-start-2  sm:items-start">
         <h1 className="text-4xl mb-4">Shoppy List</h1>
         <div className="w-full mb-4">
-          <MemoizedRecipeUrlInput
+          <RecipeUrlInput
             url={recipe}
             onUrlChange={onChangeRecipeUrl}
             onSubmitUrl={() => onRecipeUrlAdd(recipe)}
@@ -86,6 +70,7 @@ export default function Home() {
             keywordsMap={keywordsMap}
             setKeywordsMap={setKeywordsMap}
           />
+
           <div className="right">
             <div>
               {recipeUrls.map(recipe => (

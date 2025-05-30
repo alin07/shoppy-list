@@ -20,6 +20,7 @@ export type ConsolidatedIngredient = {
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
   measurementSystem: MeasurementSystem;
+  additionalQuantity?: string | null;
 }
 
 export interface ParsedIngredient {

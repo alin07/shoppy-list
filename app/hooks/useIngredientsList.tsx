@@ -2,14 +2,17 @@ import { useState } from "react"
 import { KeywordIngredients, KeywordIngredient, ParsedIngredient, ConsolidatedIngredient, MeasurementSystem } from "../interfaces/ingredient";
 import { parseIngredient } from "parse-ingredient";
 import { Recipe } from "../interfaces/recipe";
-import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, convertToAllUnits } from "../utils/ingredients";
+import { IMPERIAL_UNITS, IMPERIAL, METRIC_UNITS, METRIC, UNIT_ORDER, convertToAllUnits } from "../utils/ingredients";
 
+const INGREDIENT_SIZES = new Set([
+  "small", "medium", "large"
+])
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
-  // "black", "white", "red", "yellow", "green",
-  "minced", "smashed", "extra-virgin", "extra", "virgin",
-  "freshly", "ground", "kosher", "fresh", "frozen", "dried", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
+  "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
 ]);
+
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
   "and", "or"
 ]);
@@ -68,62 +71,81 @@ const useIngredientsList = () => {
         };
 
         const keywordData = keywordsMap[keyword];
+        let additionalQuantity = "";
+
+        if (transformed.unitOfMeasureID
+          && !INGREDIENT_SIZES.has(transformed.unitOfMeasureID)
+          && !isImperialOrMetric(transformed.unitOfMeasureID)) {
+          additionalQuantity = `${transformed.quantity} ${transformed.unitOfMeasure}`
+        }
 
         const baseKeywordIngredientData: KeywordIngredient =
-          keywordData?.unitOfMeasure
-            ? keywordData
-            : {
-              isChecked: false,
-              ingredients: [transformed],
-              quantity: transformed.quantity || 0,
-              measurementSystem: unitOfMeasureType,
-              unitOfMeasure: transformed.unitOfMeasure,
-              unitOfMeasureID: transformed.unitOfMeasureID,
-            };
+        {
+          isChecked: false,
+          ingredients: additionalQuantity ? [] : [transformed],
+          quantity: additionalQuantity ? 0 : transformed.quantity || 0,
+          measurementSystem: unitOfMeasureType,
+          unitOfMeasure: transformed.unitOfMeasure,
+          unitOfMeasureID: transformed.unitOfMeasureID,
+          additionalQuantity
+        };
 
         const initialConsolidatedIng: ConsolidatedIngredient = {
           keyword,
-          quantity: transformed.quantity,
-          measurementSystem: transformed.measurementSystem,
-          unitOfMeasure: transformed.unitOfMeasure,
-          unitOfMeasureID: transformed.unitOfMeasureID,
+          quantity: baseKeywordIngredientData.quantity,
+          measurementSystem: baseKeywordIngredientData.measurementSystem,
+          unitOfMeasure: baseKeywordIngredientData.unitOfMeasure,
+          unitOfMeasureID: baseKeywordIngredientData.unitOfMeasureID,
+          additionalQuantity: baseKeywordIngredientData.additionalQuantity
         };
 
         const consolidatedIngredient: ConsolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
-
           const prevMeasurementSystem = accum.measurementSystem,
-            prevUnitOfMeasureID = accum.unitOfMeasureID || "";
+            prevUnitOfMeasureID = accum.unitOfMeasureID || "",
+            currentUnitOfMeasureId = val.unitOfMeasureID || "";
 
           let quantity = accum.quantity || 0,
-            additionalQuantity = "",
+            additionalQuantity = accum.additionalQuantity,
             unitOfMeasureID = prevUnitOfMeasureID,
             unitOfMeasure = accum.unitOfMeasure,
             measurementSys = prevMeasurementSystem;
-          if (keyword === "parsley")
-            console.log("switching unitOfMeasure")
-          if (prevMeasurementSystem !== val.measurementSystem
-            || prevUnitOfMeasureID !== val.unitOfMeasureID) {
+
+          if (currentUnitOfMeasureId
+            && !INGREDIENT_SIZES.has(currentUnitOfMeasureId)
+            && !isImperialOrMetric(currentUnitOfMeasureId)) {
+            additionalQuantity += `${val.quantity} ${currentUnitOfMeasureId} `
+          }
+          // if using diff measurement systems or units
+          if (prevUnitOfMeasureID !== currentUnitOfMeasureId) {
+            // if prev isn't imperial/metric and current one is
             if (!isImperialOrMetric(prevUnitOfMeasureID)
-              && isImperialOrMetric(val.unitOfMeasureID || "")) {
-              unitOfMeasureID = val.unitOfMeasureID || "";
+              && isImperialOrMetric(currentUnitOfMeasureId)) {
+
+              unitOfMeasureID = currentUnitOfMeasureId;
               unitOfMeasure = val.unitOfMeasure;
               measurementSys = val.measurementSystem;
+              quantity = val.quantity || 0;
 
-            } else if (!isImperialOrMetric(val.unitOfMeasureID || "")) {
-              additionalQuantity += `${val.quantity} ${val.unitOfMeasure} `
-              console.log(additionalQuantity)
-            } else {
-              const newQuantity = convertToAllUnits(val?.quantity, prevUnitOfMeasureID, val.unitOfMeasureID) || 0;
-              quantity += newQuantity;
-              // unitOfMeasure = accum.unitOfMeasure || "";
-              // unitOfMeasureID = val.unitOfMeasureID || "";
+            } else if (isImperialOrMetric(prevUnitOfMeasureID)
+              && isImperialOrMetric(currentUnitOfMeasureId)) {
+              // if both are imperial/metric,
+              // find the bigger unit and use that unit instead
+              const smallerUnitIngredient = UNIT_ORDER[prevUnitOfMeasureID] > UNIT_ORDER[currentUnitOfMeasureId] ? val : accum;
+              const largerUnitIngredient = UNIT_ORDER[prevUnitOfMeasureID] > UNIT_ORDER[currentUnitOfMeasureId] ? accum : val;
 
-              console.log(keyword, ": new quantity is from ", val?.quantity, val.unitOfMeasureID, "=>", val.unitOfMeasureID, newQuantity, "total quantity=", quantity)
+              if (accum.unitOfMeasureID !== largerUnitIngredient.unitOfMeasureID) {
+                quantity = convertToAllUnits(accum.quantity, smallerUnitIngredient.unitOfMeasureID, largerUnitIngredient.unitOfMeasureID) || 0;
+              }
+              quantity += convertToAllUnits(smallerUnitIngredient.quantity, smallerUnitIngredient.unitOfMeasureID, largerUnitIngredient.unitOfMeasureID) || 0;
+
+              unitOfMeasure = largerUnitIngredient.unitOfMeasure;
+              unitOfMeasureID = largerUnitIngredient.unitOfMeasureID || "";
+              measurementSys = largerUnitIngredient.measurementSystem;
             }
-          } else {
+
+          } else { // if using same measurement systems and units
             quantity += val.quantity || 0;
           }
-
           return ({
             ...accum,
             quantity,
@@ -140,8 +162,10 @@ const useIngredientsList = () => {
           ...keywords,
           [keyword]: {
             ...baseKeywordIngredientData,
+            ...consolidatedIngredient,
             ingredients: [...keywordIngs, transformed],
-            quantity: consolidatedIngredient?.quantity || 0
+            quantity: consolidatedIngredient?.quantity || 0,
+
           }
         }
       } catch (error) {
@@ -151,10 +175,7 @@ const useIngredientsList = () => {
 
 
 
-    setKeywordsMap((km) => {
-      console.log("current keywords map ", { ...km, ...keywords })
-      return ({ ...km, ...keywords })
-    });
+    setKeywordsMap((km) => ({ ...km, ...keywords }));
   };
 
 

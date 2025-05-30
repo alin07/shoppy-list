@@ -19,10 +19,10 @@ function Accordion(props: { title: ReactNode; content: ReactNode; defaultExpande
           {expanded ? minusIcon : plusIcon}
         </div>
       </div>
-      <div className={`px-6 pt-0 overflow-hidden transition-[max-height] duration-500 ease-in ${expanded ? "max-h-40" : "max-h-0"}`}>
-        <p className="pb-4 text-left">
+      <div className={`px-6 pt-0 overflow-hidden transition-[max-height] duration-500 ease-in ${expanded ? "" : "max-h-0"}`}>
+        <div className="pb-4 text-left">
           {content}
-        </p>
+        </div>
       </div>
     </div>
   )

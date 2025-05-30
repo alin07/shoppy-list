@@ -42,6 +42,20 @@ export const METRIC_UNITS: Record<string, boolean> = {
   kilogram: true,
 };
 
+export const UNIT_ORDER: Record<string, number> = {
+  teaspoon: 1,
+  tablespoon: 2,
+  cup: 3,
+  pint: 4,
+  gallon: 5,
+  milliliter: 1,
+  liter: 2,
+  ounce: 1,
+  milligram: 1,
+  gram: 2,
+  kilogram: 3
+}
+
 export const UNIT_CONVERSIONS: Record<string, Conversion> = {
   teaspoon: {
     tablespoon: 1 / 3,
@@ -112,7 +126,7 @@ export const UNIT_CONVERSIONS: Record<string, Conversion> = {
     cup: 4.167,
     pint: 2.113,
     quart: 1.057,
-    gallon: 3.785,
+    gallon: 1 / 3.785,
     milliliter: 1000
   },
   ounce: {
