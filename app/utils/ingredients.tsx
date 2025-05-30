@@ -1,4 +1,4 @@
-import { Conversion, UnitDefinition } from "../interfaces/ingredient";
+import { Conversion } from "../interfaces/ingredient";
 
 export const retrieveRecipe = async (url: string) => {
   try {
@@ -11,10 +11,10 @@ export const retrieveRecipe = async (url: string) => {
   }
 };
 
-export const getValue = (p: string | string[] | undefined) => {
-  if (!p) return null;
-  return Array.isArray(p) ? p[0] : p;
-};
+// export const getValue = (p: string | string[] | undefined) => {
+//   if (!p) return null;
+//   return Array.isArray(p) ? p[0] : p;
+// };
 
 export const IMPERIAL = "imperial";
 export const METRIC = "metric";

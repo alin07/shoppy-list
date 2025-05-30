@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useCallback, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 // import { RecipeIngredientList } from './components/recipeIngredientList'
 import RecipeUrlInput from "./components/recipeUrlInput";
-import { Recipe, RecipeUrl } from './interfaces/recipe';
+import { RecipeUrl } from './interfaces/recipe';
 // import { IngredientMap, IngredientProportion, IngredientProportionObject, IngredientCheckbox } from './interfaces/ingredient';
 // import { setUpIngredientMap } from "./utils/ingredients";
 import { ShoppingIngredientList } from './components/shoppingIngredientList';
@@ -27,52 +27,28 @@ export default function Home() {
   } = useFetchRecipeUrl();
 
   const {
-    extractIngredient,
+    extractIngredients,
     // ingredientProportionMap,
     // setIngredientProportionMap,
     keywordsMap,
     setKeywordsMap
   } = useIngredientsList();
 
-  const extractIngredients = useCallback((recipeData: Recipe) => extractIngredient(recipeData), []);
+  // const extractIngredients = useCallback((recipeData: Recipe) => extractIngredient(recipeData), []);
 
   // console.log(loading, ingredients, ingredientProportionMap, recipeData);
 
-  const onChangeRecipeUrl = useCallback((url: string) => {
+  const onChangeRecipeUrl = (url: string) => {
     setRecipe(url);
-  }, []);
+  };
 
-  // useEffect(() => {
-  //   if (recipe) {
-  //     setRecipeUrls([
-  //       ...recipeUrls,
-  //       {
-  //         url: recipe,
-  //         isLoading: loading,
-  //         ldJson: {}
-  //       }]);
-  //   } else {
-  //     const loadingRecipe = recipeUrls.filter(r => r.isLoading)[0]
-  //     const recipeList = recipeUrls.filter(r => !r.isLoading)
-
-  //     setRecipeUrls([
-  //       ...recipeList,
-  //       {
-  //         ...loadingRecipe,
-  //         isLoading: loading,
-  //         ldJson: recipeData
-  //       }]);
-  //   }
-  // }, [loading, recipeData])
 
   useEffect(() => {
-    const url: string = recipeData.url;
+    const url: string = recipeData?.url || "";
 
-    // setIngredientProportionMap(map => ({
-    //   ...map,
-    //   [url]: ingredientMap
-    // }));
-    extractIngredients(recipeData);
+    if (recipeData)
+      extractIngredients(recipeData);
+
 
     setRecipeUrls((prevUrls) =>
       prevUrls.map((ru: RecipeUrl) =>
@@ -80,9 +56,9 @@ export default function Home() {
           ? { ...ru, isLoading: false, ldJson: recipeData }
           : ru
       ));
-  }, [extractIngredients, recipeData]);
+  }, [recipeData, extractIngredients]);
 
-  const onRecipeUrlAdd = useCallback((url: string) => {
+  const onRecipeUrlAdd = (url: string) => {
     if (recipeUrls.some(ru => ru.url === url)) {
       setError("Recipe URL already in the list");
       setTimeout(() => setError(""), 5000);
@@ -90,7 +66,7 @@ export default function Home() {
     }
     fetchRecipeData(url);
     setRecipe("");
-  }, [recipeUrls, setError, fetchRecipeData]);
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">

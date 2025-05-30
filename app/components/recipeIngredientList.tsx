@@ -1,56 +1,52 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import { Recipe } from "../interfaces/recipe";
-import { parseIngredient } from 'parse-ingredient';
-import { getValue } from "../utils/ingredients";
-import { IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
+// import { parseIngredient } from 'parse-ingredient';
+// import { getValue } from "../utils/ingredients";
+// import { IngredientProportionObject, ParsedIngredient } from "../interfaces/ingredient";
 
 
 export const RecipeIngredientList = (props: {
   recipeItems: Recipe;
-  ingredientProportionMap: IngredientProportionObject;
-  setIngredientProportionMap: Dispatch<SetStateAction<IngredientProportionObject>>;
   url: string;
 }) => {
   const {
     recipeItems,
-    setIngredientProportionMap,
     url,
-    ingredientProportionMap
   } = props
 
-  const servingSize = ingredientProportionMap[url]?.proportion
+  // const servingSize = ingredientProportionMap[url]?.proportion
 
-  const onServingSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const ingList = ingredientProportionMap[url].ingredients?.map((ing: ParsedIngredient) => ({
-      ...ing,
-      scaledQuantity: ing.quantity
-        ? ing.quantity * e.target.valueAsNumber
-        : 0
-    }));
+  // const onServingSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // const ingList = ingredientProportionMap[url].ingredients?.map((ing: ParsedIngredient) => ({
+  //   ...ing,
+  //   scaledQuantity: ing.quantity
+  //     ? ing.quantity * e.target.valueAsNumber
+  //     : 0
+  // }));
 
-    setIngredientProportionMap({
-      ...ingredientProportionMap,
-      [url]: {
-        ...ingredientProportionMap[url],
-        proportion: e.target.valueAsNumber,
-        ingredients: ingList
-      }
-    });
-  }
+  // setIngredientProportionMap({
+  //   ...ingredientProportionMap,
+  //   [url]: {
+  //     ...ingredientProportionMap[url],
+  //     proportion: e.target.valueAsNumber,
+  //     ingredients: ingList
+  //   }
+  // });
+  // }
 
-  const recipeYield = recipeItems?.recipeYield
-    ? getValue(recipeItems.recipeYield)
-    : null;
+  // const recipeYield = recipeItems?.recipeYield
+  //   ? getValue(recipeItems.recipeYield)
+  //   : null;
 
-  const recipeYieldParsed = recipeYield ? parseIngredient(recipeYield)[0] : null;
+  // const recipeYieldParsed = recipeYield ? parseIngredient(recipeYield)[0] : null;
 
   return (
     <div>
-      {recipeItems.name &&
+      {/* {recipeItems.name &&
         <h3><a href={url} target="_blank">{recipeItems.name}</a></h3>
-      }
+      } */}
 
-      {recipeYield &&
+      {/* {recipeYield &&
         <h4>
           {recipeYieldParsed?.quantity && servingSize
             ? recipeYieldParsed.quantity * servingSize
@@ -58,9 +54,9 @@ export const RecipeIngredientList = (props: {
           {` `}
           {recipeYieldParsed?.description || "serving(s)"}
         </h4>
-      }
+      } */}
 
-      <div className="slidecontainer">
+      {/* <div className="slidecontainer">
         <input
           type="range"
           min="0"
@@ -72,7 +68,7 @@ export const RecipeIngredientList = (props: {
           onChange={onServingSizeChange} />
 
         <p>{servingSize} x</p>
-      </div>
+      </div> */}
 
       <label>
         <input className="peer/showLabel scale-0" type="checkbox" />

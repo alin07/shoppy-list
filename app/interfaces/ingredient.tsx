@@ -1,7 +1,7 @@
 import { IMPERIAL, METRIC } from "../utils/ingredients"
 // ingredients extracted and then parsed by nlp
 
-export type measurementSystem = typeof IMPERIAL | typeof METRIC | null;
+export type MeasurementSystem = typeof IMPERIAL | typeof METRIC | null;
 
 export interface ExtractedIngredient {
   description: string;
@@ -11,7 +11,7 @@ export interface ExtractedIngredient {
   scaledQuantity?: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
-  measurementSystem: measurementSystem;
+  measurementSystem: MeasurementSystem;
 }
 
 export type ConsolidatedIngredient = {
@@ -19,7 +19,7 @@ export type ConsolidatedIngredient = {
   quantity: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
-  measurementSystem: measurementSystem;
+  measurementSystem: MeasurementSystem;
 }
 
 export interface ParsedIngredient {
@@ -28,7 +28,7 @@ export interface ParsedIngredient {
   quantity: number | null;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
-  measurementSystem: measurementSystem;
+  measurementSystem: MeasurementSystem;
   isChecked: boolean;
   recipeUrl: string | null;
   recipeTitle: string;
@@ -41,7 +41,8 @@ export type KeywordIngredient =
     quantity: number,
     unitOfMeasure: string | null;
     unitOfMeasureID: string | null;
-    measurementSystem: measurementSystem;
+    measurementSystem: MeasurementSystem;
+    additionalQuantity?: string | null;
   };
 
 export type KeywordIngredients = {
@@ -50,32 +51,31 @@ export type KeywordIngredients = {
 
 export type Conversion = Record<string, number>;
 
-
 export type ConversionOption = {
   [unit: string]: { quantity: number }
 }
 
-export interface IngredientProportion {
-  ingredients?: ParsedIngredient[];
-  proportion?: number;
-  recipeYield?: string | null;
-}
+// export interface IngredientProportion {
+//   ingredients?: ParsedIngredient[];
+//   proportion?: number;
+//   recipeYield?: string | null;
+// }
 
 
-export type IngredientProportionObject = Record<string, IngredientProportion>;
+// export type IngredientProportionObject = Record<string, IngredientProportion>;
 
-export interface IngredientMap {
-  [ingredient: string]: IngredientMapItem;
-}
+// export interface IngredientMap {
+//   [ingredient: string]: IngredientMapItem;
+// }
 
-export interface IngredientMapItem {
-  quantity: number;
-  unit: string;
-}
+// export interface IngredientMapItem {
+//   quantity: number;
+//   unit: string;
+// }
 
-export interface IngredientCheckbox {
-  isChecked: boolean;
-  name: string;
-  listOrder: number;
-  curOrder: number;
-}
+// export interface IngredientCheckbox {
+//   isChecked: boolean;
+//   name: string;
+//   listOrder: number;
+//   curOrder: number;
+// }

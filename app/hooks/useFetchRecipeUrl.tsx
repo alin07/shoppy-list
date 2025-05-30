@@ -4,7 +4,7 @@ import { retrieveRecipe } from "../utils/ingredients";
 
 const useFetchRecipeUrl = () => {
   const [error, setError] = useState<string>("");
-  const [recipeData, setRecipeData] = useState<Recipe>({});
+  const [recipeData, setRecipeData] = useState<Recipe>();
   const [loading, setLoading] = useState<boolean>(false);
 
   const fetchRecipeData = useCallback(async (url: string) => {
