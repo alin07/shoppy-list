@@ -120,7 +120,7 @@ const useIngredientsList = () => {
         }, initialConsolidatedIng) || initialConsolidatedIng;
 
         const keywordIngs = (keywords as KeywordIngredients)[keyword]?.ingredients || [];
-        console.log("consolidatedIngredient", consolidatedIngredient)
+
         keywords = {
           ...keywords,
           [keyword]: {

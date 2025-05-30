@@ -8,7 +8,6 @@ const GroupedIngredients = (props: {
   setCheckedKeyword: ChangeEventHandler<HTMLInputElement>;
   keywordIngredient: KeywordIngredient;
   keyword: string;
-  recipeUrls: RecipeUrl[];
 }) => {
   const {
     setChecked,
@@ -20,6 +19,7 @@ const GroupedIngredients = (props: {
   return (
     <div>
       <Accordion
+        defaultExpanded={false}
         title={
           <label htmlFor={keyword} className={`ms-2${keywordIngredient.isChecked ? " line-through" : ""}`}>
             <input
