@@ -10,7 +10,11 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-cooked",
+  "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked",
+  "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly",
+  "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced",
+  "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
@@ -35,11 +39,19 @@ const isImperialOrMetric = (unit: string) => {
   return IMPERIAL_UNITS[unit] || METRIC_UNITS[unit];
 }
 
+const removeIfIngSizeExists = (str: string) => {
+  if (INGREDIENT_SIZES.has(str)) return ""
+  return str;
+}
+
 const useIngredientsList = () => {
   const [keywordsMap, setKeywordsMap] = useState<KeywordIngredients>({});
 
   let keywords = keywordsMap
-
+  /**
+   * TODO: fix bug where keyword is "1 whole tomatoes" when whole ing is 
+   * "1 (28-ounce can) whole peeled tomatoes"
+   */
   const extractIngredients = (recipeData: Recipe) => {
     const recipeIng: string[] = recipeData?.recipeIngredient || [];
 
@@ -90,29 +102,29 @@ const useIngredientsList = () => {
           additionalQuantity
         };
 
-        const initialConsolidatedIng: ConsolidatedIngredient = {
-          keyword,
-          quantity: baseKeywordIngredientData.quantity,
-          measurementSystem: baseKeywordIngredientData.measurementSystem,
-          unitOfMeasure: baseKeywordIngredientData.unitOfMeasure,
-          unitOfMeasureID: baseKeywordIngredientData.unitOfMeasureID,
-          additionalQuantity: baseKeywordIngredientData.additionalQuantity
-        };
+        const initialConsolidatedIng: ConsolidatedIngredient = (({
+          isChecked,
+          ingredients,
+          ...o
+        }) => o)({ ...baseKeywordIngredientData, keyword });
 
         const consolidatedIngredient: ConsolidatedIngredient = keywordData?.ingredients.reduce((accum, val) => {
           const prevMeasurementSystem = accum.measurementSystem,
-            prevUnitOfMeasureID = accum.unitOfMeasureID || "",
-            currentUnitOfMeasureId = val.unitOfMeasureID || "";
+            prevUnitOfMeasureID = removeIfIngSizeExists(accum.unitOfMeasureID || "") || "",
+            currentUnitOfMeasureId = removeIfIngSizeExists(val.unitOfMeasureID || "") || "";
 
           let quantity = accum.quantity || 0,
             additionalQuantity = accum.additionalQuantity,
             unitOfMeasureID = prevUnitOfMeasureID,
-            unitOfMeasure = accum.unitOfMeasure,
+            unitOfMeasure = removeIfIngSizeExists(accum.unitOfMeasure || ""),
             measurementSys = prevMeasurementSystem;
 
-          if (currentUnitOfMeasureId
-            && !INGREDIENT_SIZES.has(currentUnitOfMeasureId)
-            && !isImperialOrMetric(currentUnitOfMeasureId)) {
+          if (keyword === "parsley")
+            console.log("hello world")
+          if ((currentUnitOfMeasureId
+            && !isImperialOrMetric(currentUnitOfMeasureId)) ||
+            (!currentUnitOfMeasureId
+              && accum.unitOfMeasureID)) {
             additionalQuantity += `${val.quantity} ${currentUnitOfMeasureId} `
           }
           // if using diff measurement systems or units
@@ -122,7 +134,7 @@ const useIngredientsList = () => {
               && isImperialOrMetric(currentUnitOfMeasureId)) {
 
               unitOfMeasureID = currentUnitOfMeasureId;
-              unitOfMeasure = val.unitOfMeasure;
+              unitOfMeasure = val.unitOfMeasure || "";
               measurementSys = val.measurementSystem;
               quantity = val.quantity || 0;
 
@@ -138,7 +150,7 @@ const useIngredientsList = () => {
               }
               quantity += convertToAllUnits(smallerUnitIngredient.quantity, smallerUnitIngredient.unitOfMeasureID, largerUnitIngredient.unitOfMeasureID) || 0;
 
-              unitOfMeasure = largerUnitIngredient.unitOfMeasure;
+              unitOfMeasure = largerUnitIngredient.unitOfMeasure || "";
               unitOfMeasureID = largerUnitIngredient.unitOfMeasureID || "";
               measurementSys = largerUnitIngredient.measurementSystem;
             }
