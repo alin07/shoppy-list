@@ -107,6 +107,19 @@ const getConversionUnitPriority = (unitId: string): number => {
   return UNIT_ORDER[unitId] || 0;
 };
 
+const generateAdditionalQuantity = (
+  prevAdditionalQuantity: string | null | undefined,
+  newQuantity: number | null,
+  currentUnitOfMeasurementId: string | null) => {
+
+  const parts = [
+    prevAdditionalQuantity,
+    newQuantity,
+    currentUnitOfMeasurementId
+  ].filter(Boolean);
+  return parts.join(" ").trim();
+}
+
 const consolidateUnits = (
   existingIngredient: ConsolidatedIngredient,
   newIngredient: ParsedIngredient
@@ -124,11 +137,16 @@ const consolidateUnits = (
     currentUnitId = removeIngredientSize(newIngredient.unitOfMeasureID || "");
 
   if (shouldAddAdditionalQuantity(currentUnitId)) {
-    const newAdditionalQuantity = `${existingIngredient?.additionalQuantity + ", " || " "} ${newIngredient.quantity || " "} ${currentUnitId || " "} `
+
+    const newAdditionalQuantity = generateAdditionalQuantity(
+      existingIngredient.additionalQuantity,
+      newIngredient.quantity,
+      currentUnitId
+    );
 
     return {
       ...existingIngredient,
-      additionalQuantity: newAdditionalQuantity.trim()
+      additionalQuantity: newAdditionalQuantity
     };
 
   }
@@ -182,8 +200,11 @@ const consolidateUnits = (
 
   return {
     ...existingIngredient,
-    additionalQuantity: (existingIngredient?.additionalQuantity + " " || "") +
-      `${newIngredient.quantity} ${currentUnitId} `
+    additionalQuantity: generateAdditionalQuantity(
+      existingIngredient?.additionalQuantity,
+      newIngredient.quantity,
+      currentUnitId
+    );
   };
 };
 
@@ -200,7 +221,11 @@ const consolidateKeywordIngredient = (
       unitOfMeasure: newIngredient.unitOfMeasure,
       unitOfMeasureID: newIngredient.unitOfMeasureID,
       additionalQuantity: shouldAddAdditionalQuantity(newIngredient.unitOfMeasureID)
-        ? `${newIngredient.quantity || " "} ${newIngredient.unitOfMeasure || " "}`.trim()
+        ? generateAdditionalQuantity(
+          null,
+          newIngredient?.quantity,
+          newIngredient.unitOfMeasureID
+        )
         : "",
       isChecked: false,
       ingredients: [newIngredient],
@@ -213,7 +238,11 @@ const consolidateKeywordIngredient = (
     unitOfMeasure: currentKeywordData.unitOfMeasure,
     unitOfMeasureID: currentKeywordData.unitOfMeasureID,
     additionalQuantity: shouldAddAdditionalQuantity(currentKeywordData.unitOfMeasureID)
-      ? `${currentKeywordData?.additionalQuantity + ", " || " "} ${currentKeywordData.quantity || " "} ${currentKeywordData.unitOfMeasure || " "}`.trim()
+      ? generateAdditionalQuantity(
+        currentKeywordData?.additionalQuantity,
+        currentKeywordData.quantity,
+        currentKeywordData.unitOfMeasure
+      )
       : currentKeywordData?.additionalQuantity || "",
     keyword: newIngredient?.keyword || ""
   };
