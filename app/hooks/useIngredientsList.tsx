@@ -180,7 +180,6 @@ const consolidateUnits = (
     };
   }
 
-
   return {
     ...existingIngredient,
     additionalQuantity: (existingIngredient?.additionalQuantity + " " || "") +
@@ -233,23 +232,6 @@ const consolidateKeywordIngredient = (
 const useIngredientsList = () => {
   const [keywordsMap, setKeywordsMap] = useState<KeywordIngredients>({});
 
-  const processIngredients = useCallback((ingredients: ParsedIngredient[]): KeywordIngredients => {
-    const newKeywordsMap: KeywordIngredients = { ...keywordsMap };
-
-    ingredients.forEach(ingredient => {
-      if (!ingredient.keyword) return;
-
-      const existingKeywordData = newKeywordsMap[ingredient.keyword];
-
-      newKeywordsMap[ingredient.keyword] = consolidateKeywordIngredient(
-        existingKeywordData,
-        ingredient
-      );
-    });
-
-    return newKeywordsMap;
-  }, []);
-
   const extractIngredients = useCallback((recipeData: Recipe) => {
     if (!recipeData?.recipeIngredient?.length) {
       console.warn("No recipe ingredients found in recipe data");
@@ -283,7 +265,7 @@ const useIngredientsList = () => {
     } catch (error) {
       console.error("Error extracting ingredients from recipe:", error, recipeData);
     }
-  }, [processIngredients]);
+  }, []);
 
 
   return {
