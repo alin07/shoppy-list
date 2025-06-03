@@ -204,7 +204,7 @@ const consolidateUnits = (
       existingIngredient?.additionalQuantity,
       newIngredient.quantity,
       currentUnitId
-    );
+    )
   };
 };
 
