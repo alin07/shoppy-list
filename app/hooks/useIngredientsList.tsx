@@ -124,7 +124,7 @@ const consolidateUnits = (
     currentUnitId = removeIngredientSize(newIngredient.unitOfMeasureID || "");
 
   if (shouldAddAdditionalQuantity(currentUnitId)) {
-    let newAdditionalQuantity = `${existingIngredient?.additionalQuantity + ", " || " "} ${newIngredient.quantity || " "} ${currentUnitId || " "} `
+    const newAdditionalQuantity = `${existingIngredient?.additionalQuantity + ", " || " "} ${newIngredient.quantity || " "} ${currentUnitId || " "} `
 
     return {
       ...existingIngredient,
