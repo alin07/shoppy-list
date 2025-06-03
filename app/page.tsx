@@ -21,7 +21,9 @@ export default function Home() {
   const {
     extractIngredients,
     keywordsMap,
-    setKeywordsMap
+    // setKeywordsMap,
+    toggleCheckedKeyword,
+    toggleCheckedIngredient
   } = useIngredientsList();
 
   const onChangeRecipeUrl = (url: string) => {
@@ -40,7 +42,7 @@ export default function Home() {
           ? { ...ru, isLoading: false, ldJson: recipeData }
           : ru
       ));
-  }, [recipeData]);
+  }, [recipeData, extractIngredients]);
 
   const onRecipeUrlAdd = (url: string) => {
     if (recipeUrls.some(ru => ru.url === url)) {
@@ -68,7 +70,8 @@ export default function Home() {
         <div className="flex w-full justify-between">
           <ShoppingIngredientList
             keywordsMap={keywordsMap}
-            setKeywordsMap={setKeywordsMap}
+            toggleCheckedKeyword={toggleCheckedKeyword}
+            toggleCheckedIngredient={toggleCheckedIngredient}
           />
 
           <div className="right">

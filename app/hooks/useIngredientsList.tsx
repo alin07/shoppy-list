@@ -99,7 +99,7 @@ const parseRecipeIngredient = (
 
 const shouldAddAdditionalQuantity = (unitId: string | null): boolean => {
   if (!unitId) return false;
-  return !isImperialOrMetric(unitId) && !INGREDIENT_SIZES.has(unitId)
+  return !isImperialOrMetric(unitId) && !INGREDIENT_SIZES.has(unitId);
 
 };
 
@@ -120,6 +120,40 @@ const generateAdditionalQuantity = (
   return parts.join(" ").trim();
 }
 
+const consolidateToLargerUnit = (
+  existingIngredient: ConsolidatedIngredient,
+  newIngredient: ParsedIngredient,
+  prevUnitId: string,
+  currentUnitId: string
+): ConsolidatedIngredient => {
+
+  const existingOrder = getConversionUnitPriority(prevUnitId);
+  const newOrder = getConversionUnitPriority(currentUnitId);
+
+  const largerUnit = existingOrder > newOrder ? existingIngredient : newIngredient;
+  const smallerUnit = existingOrder > newOrder ? newIngredient : existingIngredient;
+
+  let totalQuantity = largerUnit.quantity || 0;
+
+  const convertedQuantity = convertToAllUnits(
+    smallerUnit.quantity,
+    smallerUnit.unitOfMeasureID,
+    largerUnit.unitOfMeasureID
+  );
+
+  if (convertedQuantity !== null) {
+    totalQuantity += convertedQuantity;
+  }
+
+  return {
+    ...existingIngredient,
+    quantity: totalQuantity,
+    unitOfMeasure: largerUnit.unitOfMeasure || "",
+    unitOfMeasureID: largerUnit.unitOfMeasureID || "",
+    measurementSystem: largerUnit.measurementSystem
+  };
+};
+
 const consolidateUnits = (
   existingIngredient: ConsolidatedIngredient,
   newIngredient: ParsedIngredient
@@ -128,7 +162,7 @@ const consolidateUnits = (
   if (!existingIngredient) {
     return {
       ...newIngredient,
-      keyword: "",
+      keyword: newIngredient.keyword || "",
       quantity: newIngredient.quantity || 0
     };
   }
@@ -148,11 +182,8 @@ const consolidateUnits = (
       ...existingIngredient,
       additionalQuantity: newAdditionalQuantity
     };
-
-  }
-
-  // If previous unit is not standard but current is, replace it
-  if (!isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
+  } else if (!isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
+    // If previous unit is not standard but current is, replace it
     return {
       ...existingIngredient,
       keyword: existingIngredient.keyword || "",
@@ -164,32 +195,12 @@ const consolidateUnits = (
 
   } else if (prevUnitId !== currentUnitId && isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
     // If both are either metric or imperial units, convert to larger unit
-    const existingOrder = getConversionUnitPriority(prevUnitId);
-    const newOrder = getConversionUnitPriority(currentUnitId);
-
-    const largerUnit = existingOrder > newOrder ? existingIngredient : newIngredient;
-    const smallerUnit = existingOrder > newOrder ? newIngredient : existingIngredient;
-
-    let totalQuantity = largerUnit.quantity || 0;
-
-    // Convert smaller unit to larger unit and add
-    const convertedQuantity = convertToAllUnits(
-      smallerUnit.quantity,
-      smallerUnit.unitOfMeasureID,
-      largerUnit.unitOfMeasureID
+    return consolidateToLargerUnit(
+      existingIngredient,
+      newIngredient,
+      prevUnitId,
+      currentUnitId
     );
-
-    if (convertedQuantity !== null) {
-      totalQuantity += convertedQuantity;
-    }
-
-    return {
-      ...existingIngredient,
-      quantity: totalQuantity,
-      unitOfMeasure: largerUnit.unitOfMeasure || "",
-      unitOfMeasureID: largerUnit.unitOfMeasureID || "",
-      measurementSystem: largerUnit.measurementSystem
-    };
 
   } else if (prevUnitId === currentUnitId) {
     return {
@@ -230,7 +241,7 @@ const consolidateKeywordIngredient = (
       isChecked: false,
       ingredients: [newIngredient],
     };
-  }
+  };
 
   const baseIngredientData: ConsolidatedIngredient = {
     quantity: currentKeywordData.quantity || 0,
@@ -254,9 +265,7 @@ const consolidateKeywordIngredient = (
     ingredients: [...currentKeywordData.ingredients, newIngredient],
     isChecked: currentKeywordData.isChecked || false
   };
-
 };
-
 
 const useIngredientsList = () => {
   const [keywordsMap, setKeywordsMap] = useState<KeywordIngredients>({});
@@ -296,12 +305,50 @@ const useIngredientsList = () => {
     }
   }, []);
 
+  const toggleCheckedKeyword = (isChecked: boolean, keyword: string) => {
+    const keywordIngredient = keywordsMap[keyword],
+      ingredients = keywordIngredient.ingredients.map((ing: ParsedIngredient) => ({
+        ...ing,
+        isChecked: isChecked
+      }));
+
+    setKeywordsMap({
+      ...keywordsMap,
+      [keyword]: {
+        ...keywordIngredient,
+        ingredients,
+        isChecked
+      }
+    });
+  }
+
+  const toggleCheckedIngredient = (isChecked: boolean, keyword: string, ingredientDesc: string) => {
+    const keywordIngredient = keywordsMap[keyword],
+      ingredients = keywordIngredient.ingredients.map((i: ParsedIngredient) => (
+        i.description === ingredientDesc
+          ? {
+            ...i,
+            isChecked: isChecked
+          }
+          : i
+      ));
+
+    setKeywordsMap({
+      ...keywordsMap,
+      [keyword]: {
+        ...keywordIngredient,
+        ingredients,
+        isChecked: ingredients.every(ing => ing.isChecked) ? true : false
+      }
+    });
+  }
 
   return {
     extractIngredients,
     keywordsMap,
     setKeywordsMap,
-
+    toggleCheckedKeyword,
+    toggleCheckedIngredient
   };
 };
 

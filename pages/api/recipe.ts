@@ -1,6 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import * as cheerio from "cheerio";
 
+const isValidUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol) &&
+      !['localhost', '127.0.0.1'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -12,13 +22,21 @@ export default async function handler(
   }
 
   try {
-    const jsonStringified = fetch(url)
-      .then((resp) => resp.text())
-      .then((text) => {
-        const $ = cheerio.load(text);
-        const ldJson = $(`script[type="application/ld+json"]`).html();
-        return ldJson;
-      });
+    if (!isValidUrl(url)) {
+      return res.status(400).json({ message: "url is invalid" });
+    }
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 10000);
+    const jsonStringified = fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'ShoppyList/1.0' }
+    })
+    .then((resp) => resp.text())
+    .then((text) => {
+      const $ = cheerio.load(text);
+      const ldJson = $(`script[type="application/ld+json"]`).html();
+      return ldJson;
+    });
     if (jsonStringified) {
       const json = JSON.parse((await jsonStringified) || "{}");
       let recipeObj = json;

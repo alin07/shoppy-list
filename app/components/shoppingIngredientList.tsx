@@ -1,58 +1,28 @@
-import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { ParsedIngredient, KeywordIngredients, KeywordIngredient } from "../interfaces/ingredient";
+import React, { ChangeEvent } from "react";
+import { KeywordIngredients } from "../interfaces/ingredient";
 import GroupedIngredients from "./groupedIngredients"
 
 // import { Flipper, Flipped } from 'react-flip-toolkit'
 
 export const ShoppingIngredientList = (props: {
   keywordsMap: KeywordIngredients;
-  setKeywordsMap: Dispatch<SetStateAction<KeywordIngredients>>;
+  toggleCheckedKeyword: (isChecked: boolean, keyword: string) => void;
+  toggleCheckedIngredient: (isChecked: boolean, keyword: string, ingredientDesc: string) => void;
 }) => {
   const {
     keywordsMap,
-    setKeywordsMap,
+    toggleCheckedKeyword,
+    toggleCheckedIngredient
   } = props
 
   const setCheckedKeyword = (e: ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked, id = e.target.id;
-    const keywordIngredient = keywordsMap[id],
-      ingredients = keywordIngredient.ingredients.map((i: ParsedIngredient) => ({
-        ...i,
-        isChecked: isChecked
-      }));
-
-    setKeywordsMap({
-      ...keywordsMap,
-      [id]: {
-        ...keywordIngredient,
-        ingredients,
-        isChecked
-      }
-    })
+    toggleCheckedKeyword(isChecked, id);
   }
 
   const setChecked = (e: ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked, id = e.target.id.split(" - ");
-    const keywordIng: KeywordIngredient = keywordsMap[id[0]];
-    const keywordIngredient = keywordIng,
-      ingredients = keywordIngredient.ingredients.map((i: ParsedIngredient) => (
-        i.description === id[1]
-          ?
-          {
-            ...i,
-            isChecked: isChecked
-          }
-          : i
-      ));
-
-    setKeywordsMap({
-      ...keywordsMap,
-      [id[0]]: {
-        ...keywordIng,
-        ingredients,
-        isChecked: ingredients.every(i => i.isChecked) ? true : false
-      }
-    })
+    toggleCheckedIngredient(isChecked, id[0], id[1]);
   }
 
 
