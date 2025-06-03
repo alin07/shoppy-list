@@ -23,7 +23,8 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "pre-cooked", "pre-chopped", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped",
+  "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
@@ -182,8 +183,9 @@ const consolidateUnits = (
       ...existingIngredient,
       additionalQuantity: newAdditionalQuantity
     };
+
   } else if (!isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
-    // If previous unit is not standard but current is, replace it
+    // If accumulated unit is not imperial or metric but new one is, replace it
     return {
       ...existingIngredient,
       keyword: existingIngredient.keyword || "",
