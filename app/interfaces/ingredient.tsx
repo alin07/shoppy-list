@@ -15,8 +15,8 @@ export interface ExtractedIngredient {
 }
 
 export type ConsolidatedIngredient = {
-  keyword: string | null;
-  quantity: number | null;
+  keyword: string;
+  quantity: number;
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
   measurementSystem: MeasurementSystem;
