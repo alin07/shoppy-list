@@ -24,7 +24,8 @@ const INGREDIENT_SIZES = new Set([
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
   "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped",
-  "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
+  "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked",
+  "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
@@ -77,7 +78,6 @@ const parseRecipeIngredient = (
   try {
     const parsed = parseIngredient(ingredientText)[0];
     if (!parsed) return null;
-
     const keyword = cleanIngredientKeyword(parsed.description);
     const unitSystem = determineUnitSystem(parsed.unitOfMeasureID);
 
@@ -111,7 +111,7 @@ const getConversionUnitPriority = (unitId: string): number => {
 const generateAdditionalQuantity = (
   prevAdditionalQuantity: string | null | undefined,
   newQuantity: number | null,
-  currentUnitOfMeasurementId: string | null) => {
+  currentUnitOfMeasurementId: string | null): string => {
 
   const parts = [
     prevAdditionalQuantity,
@@ -156,7 +156,7 @@ const consolidateToLargerUnit = (
 };
 
 const consolidateUnits = (
-  existingIngredient: ConsolidatedIngredient,
+  existingIngredient: ConsolidatedIngredient | null | undefined,
   newIngredient: ParsedIngredient
 ): ConsolidatedIngredient => {
 
@@ -254,7 +254,7 @@ const consolidateKeywordIngredient = (
       ? generateAdditionalQuantity(
         currentKeywordData?.additionalQuantity,
         currentKeywordData.quantity,
-        currentKeywordData.unitOfMeasure
+        currentKeywordData.unitOfMeasureID
       )
       : currentKeywordData?.additionalQuantity || "",
     keyword: newIngredient?.keyword || ""
@@ -340,7 +340,7 @@ const useIngredientsList = () => {
       [keyword]: {
         ...keywordIngredient,
         ingredients,
-        isChecked: ingredients.every(ing => ing.isChecked) ? true : false
+        isChecked: ingredients.every(ing => ing.isChecked)
       }
     });
   }
