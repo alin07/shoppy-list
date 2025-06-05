@@ -26,7 +26,8 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of",
+  "steamed", "smoked", "cured"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
