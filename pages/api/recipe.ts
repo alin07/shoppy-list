@@ -11,6 +11,10 @@ const isValidUrl = (url: string) => {
   }
 };
 
+const replaceBadControlCharacters = (jsonString: string) => {
+  return jsonString.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -34,7 +38,10 @@ export default async function handler(
       .then((resp) => resp.text())
       .then((text) => {
         const $ = cheerio.load(text);
-        const ldJson = $(`script[type="application/ld+json"]`).html();
+        let ldJson = $(`script[type="application/ld+json"]`).html();
+        if (ldJson) {
+          ldJson = replaceBadControlCharacters(ldJson)
+        }
         return ldJson;
       });
     if (jsonStringified) {
@@ -49,7 +56,7 @@ export default async function handler(
           (obj: { [x: string]: string }) => obj["@type"] === "Recipe"
         )[0];
       }
-      console.log(recipeObj);
+
       return res.status(200).json(recipeObj);
 
     } else {

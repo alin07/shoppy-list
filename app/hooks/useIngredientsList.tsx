@@ -26,8 +26,7 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of",
-  "steamed", "smoked", "cured"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "grated", "juiced", "sprigs", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of", "steamed", "smoked", "cured", "skin", "on", "filet", "knob"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
@@ -63,7 +62,9 @@ const cleanIngredientKeyword = (ingredient: string): string => {
       .map(word => word.replace(/^\s*,+\s*|\s*,+\s*$/g, "")) // Remove leading/trailing commas
       .filter(word => word &&
         !INGREDIENT_SIZES.has(word.toLowerCase()) &&
-        !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()));
+        !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()) &&
+        !Number.isNaN(word)
+      );
 
     while (words.length > 0 && KEYWORD_ENDINGS_TO_REMOVE.has(words[words.length - 1]?.toLowerCase())) {
       words.pop();
@@ -235,6 +236,7 @@ const consolidateKeywordIng = (
   newIngredient: ParsedIngredient
 ): KeywordIngredient => {
   const shouldAddAddQuantity = shouldAddAdditionalQuantity(newIngredient.unitOfMeasureID)
+
   if (!currentKeywordData) {
     return {
       quantity: shouldAddAddQuantity ? 0 : newIngredient?.quantity || 0,
@@ -302,30 +304,31 @@ const useIngredientsList = () => {
       setKeywordsMap(prevKeywordsMap => {
         const updatedMap = { ...prevKeywordsMap };
         parsedIngredients.forEach(ing => {
-          const keyword = ing.keyword
-          if (keyword) {
-            const keywordOrInflection = findKeywordOrInflection(updatedMap, keyword),
-              map = updatedMap[keywordOrInflection],
-              pluralKeyword = pluralize(keywordOrInflection);
-            // if keyword or it's plural/singular form exists in the map and quantity > 1, pluralize the keyword and remove the singular keyword
-            if (updatedMap[keywordOrInflection] &&
-              !updatedMap[keywordOrInflection].unitOfMeasureID &&
-              updatedMap[keywordOrInflection].quantity > 1 &&
-              singularize(keywordOrInflection) === keywordOrInflection) {
+          const keyword = ing.keyword || ""
 
-              updatedMap[keywordOrInflection] = consolidateKeywordIng(
-                map,
-                ing
-              );
+          const keywordOrInflection = findKeywordOrInflection(updatedMap, keyword),
+            map = updatedMap[keywordOrInflection],
+            pluralKeyword = pluralize(keywordOrInflection);
 
-              if (keywordOrInflection !== pluralKeyword)
-                delete updatedMap[keywordOrInflection];
-            } else {
-              updatedMap[keywordOrInflection] = consolidateKeywordIng(
-                map,
-                ing
-              );
-            }
+          // if keyword or it's plural/singular form exists in the map and quantity > 1, pluralize the keyword and remove the singular keyword
+          if (updatedMap[keywordOrInflection] &&
+            !updatedMap[keywordOrInflection].unitOfMeasureID &&
+            updatedMap[keywordOrInflection].quantity > 1 &&
+            singularize(keywordOrInflection) === keywordOrInflection) {
+
+            updatedMap[keywordOrInflection] = consolidateKeywordIng(
+              map,
+              ing
+            );
+
+            if (keywordOrInflection !== pluralKeyword)
+              delete updatedMap[keywordOrInflection];
+          } else {
+            updatedMap[keywordOrInflection] = consolidateKeywordIng(
+              map,
+              ing
+            );
+
           }
         });
 
@@ -333,6 +336,7 @@ const useIngredientsList = () => {
           ...updatedMap
         };
       });
+
 
     } catch (error) {
       console.error("Error extracting ingredients from recipe:", error, recipeData);
