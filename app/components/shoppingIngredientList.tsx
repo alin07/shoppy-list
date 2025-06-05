@@ -25,7 +25,6 @@ export const ShoppingIngredientList = (props: {
     toggleCheckedIngredient(isChecked, id[0], id[1]);
   }
 
-
   return (
     <div className="left">
       <h2>Shopping List:</h2>

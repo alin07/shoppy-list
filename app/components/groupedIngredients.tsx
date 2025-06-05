@@ -15,6 +15,13 @@ const GroupedIngredients = (props: {
     keyword,
   } = props
 
+  const additionalQuantities = keywordIngredient.additionalQuantities &&
+    Object.keys(keywordIngredient.additionalQuantities).length > 0
+    ? Object.values(keywordIngredient.additionalQuantities).map(q =>
+      `${q.quantity}${" " + q.unitOfMeasure || ""}`
+    )
+    : ""
+
   return (
     <div>
       <Accordion
@@ -29,7 +36,16 @@ const GroupedIngredients = (props: {
               className="peer/showLabel mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
               onChange={setCheckedKeyword}
             />
-            {keywordIngredient?.quantity > 0 ? keywordIngredient.quantity : ""} {keywordIngredient.unitOfMeasure} {keywordIngredient.additionalQuantity && `& ${keywordIngredient.additionalQuantity}`} {keyword}
+            {keywordIngredient?.quantity > 0
+              ? keywordIngredient.quantity
+              : ""
+            }
+            {" "}
+            {keywordIngredient.unitOfMeasure}
+            {keywordIngredient?.quantity > 0 && additionalQuantities ? " & " : ""}
+            {additionalQuantities}
+            {" "}
+            {keyword}
           </label>
         }
         content={

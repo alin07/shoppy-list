@@ -4,7 +4,8 @@ import {
   KeywordIngredient,
   ParsedIngredient,
   ConsolidatedIngredient,
-  MeasurementSystem
+  MeasurementSystem,
+  AdditionalQuantities
 } from "../interfaces/ingredient";
 import { parseIngredient } from "parse-ingredient";
 import { Recipe } from "../interfaces/recipe";
@@ -15,7 +16,9 @@ import {
   METRIC,
   UNIT_ORDER,
   convertToAllUnits
-} from "../utils/ingredients";
+} from "../utils/units";
+
+import { singularize, pluralize } from "inflection";
 
 const INGREDIENT_SIZES = new Set([
   "small", "medium", "large"
@@ -23,15 +26,12 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped",
-  "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked",
-  "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
   "and", "or"
 ]);
-
 
 const determineUnitSystem = (unitId: string | null): MeasurementSystem => {
   if (!unitId) return null;
@@ -45,10 +45,13 @@ const isImperialOrMetric = (unit: string | null) => {
   return IMPERIAL_UNITS[unit] || METRIC_UNITS[unit];
 }
 
-const removeIngredientSize = (str: string): string => {
+const removeIngSizeFromKeyword = (str: string): string => {
   return INGREDIENT_SIZES.has(str) ? "" : str;
 };
 
+const removeIngSizeFromDesc = (str: string): string => {
+  return str.split(" ").filter(s => !INGREDIENT_SIZES.has(s)).join(" ")
+}
 const cleanIngredientKeyword = (ingredient: string): string => {
   if (!ingredient?.trim()) return "";
 
@@ -57,8 +60,9 @@ const cleanIngredientKeyword = (ingredient: string): string => {
       .replace(/ *\([^)]*\) */g, "") // Remove content in parentheses
       .split(" ")
       .map(word => word.replace(/^\s*,+\s*|\s*,+\s*$/g, "")) // Remove leading/trailing commas
-      .filter(word => word && !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()));
-
+      .filter(word => word &&
+        !INGREDIENT_SIZES.has(word.toLowerCase()) &&
+        !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()));
 
     while (words.length > 0 && KEYWORD_ENDINGS_TO_REMOVE.has(words[words.length - 1]?.toLowerCase())) {
       words.pop();
@@ -76,7 +80,7 @@ const parseRecipeIngredient = (
   recipeData: Recipe
 ): ParsedIngredient | null => {
   try {
-    const parsed = parseIngredient(ingredientText)[0];
+    const parsed = parseIngredient(removeIngSizeFromDesc(ingredientText))[0];
     if (!parsed) return null;
     const keyword = cleanIngredientKeyword(parsed.description);
     const unitSystem = determineUnitSystem(parsed.unitOfMeasureID);
@@ -109,16 +113,23 @@ const getConversionUnitPriority = (unitId: string): number => {
 };
 
 const generateAdditionalQuantity = (
-  prevAdditionalQuantity: string | null | undefined,
+  curAddQuantity: AdditionalQuantities | undefined,
   newQuantity: number | null,
-  currentUnitOfMeasurementId: string | null): string => {
+  curUnitMeasurement: string | null,
+  curUnitMeasurementId: string | null
+): AdditionalQuantities => {
+  if (!curAddQuantity || !curAddQuantity[curUnitMeasurementId || ""]) {
+    return {
+      [curUnitMeasurementId || ""]: {
+        quantity: newQuantity || 0,
+        unitOfMeasure: curUnitMeasurement
+      }
+    };
+  } else if (curUnitMeasurementId) {
+    curAddQuantity[curUnitMeasurementId].quantity += newQuantity || 0;
+  }
 
-  const parts = [
-    prevAdditionalQuantity,
-    newQuantity,
-    currentUnitOfMeasurementId
-  ].filter(Boolean);
-  return parts.join(" ").trim();
+  return curAddQuantity;
 }
 
 const consolidateToLargerUnit = (
@@ -168,80 +179,79 @@ const consolidateUnits = (
     };
   }
 
-  const prevUnitId = removeIngredientSize(existingIngredient.unitOfMeasureID || ""),
-    currentUnitId = removeIngredientSize(newIngredient.unitOfMeasureID || "");
+  const prevUnitId = removeIngSizeFromKeyword(existingIngredient.unitOfMeasureID || ""),
+    currentUnitId = removeIngSizeFromKeyword(newIngredient.unitOfMeasureID || "");
 
   if (shouldAddAdditionalQuantity(currentUnitId)) {
-
     const newAdditionalQuantity = generateAdditionalQuantity(
-      existingIngredient.additionalQuantity,
+      existingIngredient.additionalQuantities,
       newIngredient.quantity,
+      newIngredient.unitOfMeasure,
       currentUnitId
     );
 
     return {
       ...existingIngredient,
-      additionalQuantity: newAdditionalQuantity
+      additionalQuantities: newAdditionalQuantity
     };
 
-  } else if (!isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
-    // If accumulated unit is not imperial or metric but new one is, replace it
-    return {
-      ...existingIngredient,
-      keyword: existingIngredient.keyword || "",
-      unitOfMeasureID: currentUnitId,
-      unitOfMeasure: newIngredient.unitOfMeasure || "",
-      measurementSystem: newIngredient.measurementSystem,
-      quantity: newIngredient.quantity || 0
-    };
+  } else
+    if (!isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
+      // If accumulated unit is not imperial or metric but new one is, replace it
+      return {
+        ...existingIngredient,
+        keyword: existingIngredient.keyword || "",
+        unitOfMeasureID: currentUnitId,
+        unitOfMeasure: newIngredient.unitOfMeasure || "",
+        measurementSystem: newIngredient.measurementSystem,
+        quantity: newIngredient.quantity || 0
+      };
 
-  } else if (prevUnitId !== currentUnitId && isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
-    // If both are either metric or imperial units, convert to larger unit
-    return consolidateToLargerUnit(
-      existingIngredient,
-      newIngredient,
-      prevUnitId,
-      currentUnitId
-    );
+    } else if (prevUnitId !== currentUnitId && isImperialOrMetric(prevUnitId) && isImperialOrMetric(currentUnitId)) {
+      // If both are either metric or imperial units, convert to larger unit
+      return consolidateToLargerUnit(
+        existingIngredient,
+        newIngredient,
+        prevUnitId,
+        currentUnitId
+      );
 
-  } else if (prevUnitId === currentUnitId) {
-    return {
-      ...existingIngredient,
-      quantity: (existingIngredient.quantity || 0) + (newIngredient.quantity || 0)
-    };
-  }
+    } else if (prevUnitId === currentUnitId) {
+      return {
+        ...existingIngredient,
+        quantity: (existingIngredient.quantity || 0) + (newIngredient.quantity || 0)
+      };
+    }
 
   return {
     ...existingIngredient,
-    additionalQuantity: generateAdditionalQuantity(
-      existingIngredient?.additionalQuantity,
-      newIngredient.quantity,
-      currentUnitId
-    )
   };
 };
 
 
-const consolidateKeywordIngredient = (
+const consolidateKeywordIng = (
   currentKeywordData: KeywordIngredient | undefined,
   newIngredient: ParsedIngredient
 ): KeywordIngredient => {
-
+  const shouldAddAddQuantity = shouldAddAdditionalQuantity(newIngredient.unitOfMeasureID)
   if (!currentKeywordData) {
     return {
-      quantity: newIngredient?.quantity || 0,
+      quantity: shouldAddAddQuantity ? 0 : newIngredient?.quantity || 0,
       measurementSystem: newIngredient.measurementSystem,
-      unitOfMeasure: newIngredient.unitOfMeasure,
-      unitOfMeasureID: newIngredient.unitOfMeasureID,
-      additionalQuantity: shouldAddAdditionalQuantity(newIngredient.unitOfMeasureID)
-        ? generateAdditionalQuantity(
-          null,
-          newIngredient?.quantity,
-          newIngredient.unitOfMeasureID
-        )
-        : "",
+      unitOfMeasure: shouldAddAddQuantity ? null : newIngredient.unitOfMeasure,
+      unitOfMeasureID: shouldAddAddQuantity ? null : newIngredient.unitOfMeasureID,
+      additionalQuantities:
+        shouldAddAddQuantity
+          ? generateAdditionalQuantity(
+            undefined,
+            newIngredient.quantity,
+            newIngredient.unitOfMeasure,
+            newIngredient.unitOfMeasureID
+          )
+          :
+          {},
       isChecked: false,
-      ingredients: [newIngredient],
+      ingredients: [newIngredient]
     };
   };
 
@@ -250,13 +260,7 @@ const consolidateKeywordIngredient = (
     measurementSystem: currentKeywordData.measurementSystem,
     unitOfMeasure: currentKeywordData.unitOfMeasure,
     unitOfMeasureID: currentKeywordData.unitOfMeasureID,
-    additionalQuantity: shouldAddAdditionalQuantity(currentKeywordData.unitOfMeasureID)
-      ? generateAdditionalQuantity(
-        currentKeywordData?.additionalQuantity,
-        currentKeywordData.quantity,
-        currentKeywordData.unitOfMeasureID
-      )
-      : currentKeywordData?.additionalQuantity || "",
+    additionalQuantities: currentKeywordData.additionalQuantities,
     keyword: newIngredient?.keyword || ""
   };
 
@@ -268,6 +272,12 @@ const consolidateKeywordIngredient = (
     isChecked: currentKeywordData.isChecked || false
   };
 };
+
+const findKeywordOrInflection = (keywordMap: KeywordIngredients, keyword: string): string => {
+  if (keywordMap[pluralize(keyword)]) return pluralize(keyword)
+  if (keywordMap[singularize(keyword)]) return singularize(keyword)
+  return keyword;
+}
 
 const useIngredientsList = () => {
   const [keywordsMap, setKeywordsMap] = useState<KeywordIngredients>({});
@@ -290,10 +300,31 @@ const useIngredientsList = () => {
 
       setKeywordsMap(prevKeywordsMap => {
         const updatedMap = { ...prevKeywordsMap };
-
         parsedIngredients.forEach(ing => {
-          if (ing.keyword) {
-            updatedMap[ing.keyword] = consolidateKeywordIngredient(updatedMap[ing.keyword], ing);
+          const keyword = ing.keyword
+          if (keyword) {
+            const keywordOrInflection = findKeywordOrInflection(updatedMap, keyword),
+              map = updatedMap[keywordOrInflection],
+              pluralKeyword = pluralize(keywordOrInflection);
+            // if keyword or it's plural/singular form exists in the map and quantity > 1, pluralize the keyword and remove the singular keyword
+            if (updatedMap[keywordOrInflection] &&
+              !updatedMap[keywordOrInflection].unitOfMeasureID &&
+              updatedMap[keywordOrInflection].quantity > 1 &&
+              singularize(keywordOrInflection) === keywordOrInflection) {
+
+              updatedMap[keywordOrInflection] = consolidateKeywordIng(
+                map,
+                ing
+              );
+
+              if (keywordOrInflection !== pluralKeyword)
+                delete updatedMap[keywordOrInflection];
+            } else {
+              updatedMap[keywordOrInflection] = consolidateKeywordIng(
+                map,
+                ing
+              );
+            }
           }
         });
 

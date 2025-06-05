@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Recipe } from '../interfaces/recipe';
-import { retrieveRecipe } from "../utils/ingredients";
+import { retrieveRecipe } from "../utils/recipe";
 
 const useFetchRecipeUrl = () => {
   const [error, setError] = useState<string>("");

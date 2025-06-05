@@ -31,12 +31,12 @@ export default async function handler(
       signal: controller.signal,
       headers: { 'User-Agent': 'ShoppyList/1.0' }
     })
-    .then((resp) => resp.text())
-    .then((text) => {
-      const $ = cheerio.load(text);
-      const ldJson = $(`script[type="application/ld+json"]`).html();
-      return ldJson;
-    });
+      .then((resp) => resp.text())
+      .then((text) => {
+        const $ = cheerio.load(text);
+        const ldJson = $(`script[type="application/ld+json"]`).html();
+        return ldJson;
+      });
     if (jsonStringified) {
       const json = JSON.parse((await jsonStringified) || "{}");
       let recipeObj = json;
@@ -49,7 +49,9 @@ export default async function handler(
           (obj: { [x: string]: string }) => obj["@type"] === "Recipe"
         )[0];
       }
+      console.log(recipeObj);
       return res.status(200).json(recipeObj);
+
     } else {
       return res.status(404).json({ message: "No ld+json found on the page" });
     }

@@ -1,18 +1,18 @@
-import { IMPERIAL, METRIC } from "../utils/ingredients"
+import { IMPERIAL, METRIC } from "../utils/units"
 // ingredients extracted and then parsed by nlp
 
 export type MeasurementSystem = typeof IMPERIAL | typeof METRIC | null;
 
-export interface ExtractedIngredient {
-  description: string;
-  isGroupHeader: boolean;
-  quantity: number | null;
-  quantity2: number | null;
-  scaledQuantity?: number | null;
-  unitOfMeasure: string | null;
-  unitOfMeasureID: string | null;
-  measurementSystem: MeasurementSystem;
-}
+// export interface ExtractedIngredient {
+//   description: string;
+//   isGroupHeader: boolean;
+//   quantity: number | null;
+//   quantity2: number | null;
+//   scaledQuantity?: number | null;
+//   unitOfMeasure: string | null;
+//   unitOfMeasureID: string | null;
+//   measurementSystem: MeasurementSystem;
+// }
 
 export type ConsolidatedIngredient = {
   keyword: string;
@@ -20,7 +20,7 @@ export type ConsolidatedIngredient = {
   unitOfMeasure: string | null;
   unitOfMeasureID: string | null;
   measurementSystem: MeasurementSystem;
-  additionalQuantity?: string | null;
+  additionalQuantities?: AdditionalQuantities;
 }
 
 export interface ParsedIngredient {
@@ -35,16 +35,24 @@ export interface ParsedIngredient {
   recipeTitle: string;
 }
 
-export type KeywordIngredient =
-  {
-    isChecked: boolean;
-    ingredients: ParsedIngredient[];
-    quantity: number,
-    unitOfMeasure: string | null;
-    unitOfMeasureID: string | null;
-    measurementSystem: MeasurementSystem;
-    additionalQuantity?: string | null;
-  };
+export type AdditionalQuantities = Record<string, AdditionalQuantity>;
+
+export type AdditionalQuantity = {
+  quantity: number;
+  unitOfMeasure: string | null;
+  // description: string;
+  // unitOfMeasureID: string | null;
+}
+
+export type KeywordIngredient = {
+  isChecked: boolean;
+  ingredients: ParsedIngredient[];
+  quantity: number,
+  unitOfMeasure: string | null;
+  unitOfMeasureID: string | null;
+  measurementSystem: MeasurementSystem;
+  additionalQuantities?: AdditionalQuantities;
+};
 
 export type KeywordIngredients = {
   [keyword: string]: KeywordIngredient
