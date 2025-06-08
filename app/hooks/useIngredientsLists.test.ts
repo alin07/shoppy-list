@@ -296,4 +296,127 @@ describe('useIngredientsList', () => {
     });
   });
 
+  // describe('toggleCheckedKeyword', () => {
+  //   beforeEach(() => {
+  //     mockParseIngredient.mockReturnValue([{
+  //       description: 'all-purpose flour',
+  //       quantity: 2,
+  //       unitOfMeasure: 'cups',
+  //       unitOfMeasureID: 'cup'
+  //     }]);
+  //   });
+
+  //   it('should toggle keyword checked status and all its ingredients', () => {
+  //     const { result } = renderHook(() => useIngredientsList());
+
+  //     act(() => {
+  //       result.current.extractIngredients(mockRecipe);
+  //     });
+
+  //     act(() => {
+  //       result.current.toggleCheckedKeyword(true, 'flour');
+  //     });
+
+  //     expect(result.current.keywordsMap['flour'].isChecked).toBe(true);
+  //     expect(result.current.keywordsMap['flour'].ingredients[0].isChecked).toBe(true);
+
+  //     act(() => {
+  //       result.current.toggleCheckedKeyword(false, 'flour');
+  //     });
+
+  //     expect(result.current.keywordsMap['flour'].isChecked).toBe(false);
+  //     expect(result.current.keywordsMap['flour'].ingredients[0].isChecked).toBe(false);
+  //   });
+  // });
+
+  // describe('toggleCheckedIngredient', () => {
+  //   beforeEach(() => {
+  //     mockParseIngredient
+  //       .mockReturnValueOnce([{
+  //         description: 'all-purpose flour',
+  //         quantity: 2,
+  //         unitOfMeasure: 'cups',
+  //         unitOfMeasureID: 'cup'
+  //       }])
+  //       .mockReturnValueOnce([{
+  //         description: 'whole wheat flour',
+  //         quantity: 1,
+  //         unitOfMeasure: 'cup',
+  //         unitOfMeasureID: 'cup'
+  //       }]);
+  //   });
+
+  //   it('should toggle individual ingredient checked status', () => {
+  //     const { result } = renderHook(() => useIngredientsList());
+  //     const recipeWithMultipleFlours: Recipe = {
+  //       name: 'Test Recipe',
+  //       url: 'https://example.com',
+  //       recipeIngredient: ['2 cups all-purpose flour', '1 cup whole wheat flour'],
+  //       mainEntityOfPage: undefined
+  //     };
+
+  //     act(() => {
+  //       result.current.extractIngredients(recipeWithMultipleFlours);
+  //     });
+
+  //     act(() => {
+  //       result.current.toggleCheckedIngredient(true, 'flour', 'all-purpose flour');
+  //     });
+
+  //     const flourKeyword = result.current.keywordsMap['flour'];
+  //     const allPurposeFlour = flourKeyword.ingredients.find(i => i.description === 'all-purpose flour');
+  //     const wholeWheatFlour = flourKeyword.ingredients.find(i => i.description === 'whole wheat flour');
+
+  //     expect(allPurposeFlour?.isChecked).toBe(true);
+  //     expect(wholeWheatFlour?.isChecked).toBe(false);
+  //     expect(flourKeyword.isChecked).toBe(false); // Not all ingredients are checked
+  //   });
+
+  //   it('should set keyword as checked when all ingredients are checked', () => {
+  //     const { result } = renderHook(() => useIngredientsList());
+  //     const recipeWithMultipleFlours: Recipe = {
+  //       name: 'Test Recipe',
+  //       url: 'https://example.com',
+  //       recipeIngredient: ['2 cups all-purpose flour', '1 cup whole wheat flour'],
+  //       mainEntityOfPage: undefined
+  //     };
+
+  //     act(() => {
+  //       result.current.extractIngredients(recipeWithMultipleFlours);
+  //     });
+
+  //     act(() => {
+  //       result.current.toggleCheckedIngredient(true, 'flour', 'all-purpose flour');
+  //     });
+
+  //     act(() => {
+  //       result.current.toggleCheckedIngredient(true, 'flour', 'whole wheat flour');
+  //     });
+
+  //     expect(result.current.keywordsMap['flour'].isChecked).toBe(true);
+  //   });
+  // });
+
+  // describe('setKeywordsMap', () => {
+  //   it('should allow direct manipulation of keywordsMap', () => {
+  //     const { result } = renderHook(() => useIngredientsList());
+  //     const newKeywordsMap = {
+  //       'test': {
+  //         quantity: 1,
+  //         measurementSystem: 'imperial' as const,
+  //         unitOfMeasure: 'cup',
+  //         unitOfMeasureID: 'cup',
+  //         additionalQuantity: '',
+  //         isChecked: false,
+  //         ingredients: []
+  //       }
+  //     };
+
+  //     act(() => {
+  //       result.current.setKeywordsMap(newKeywordsMap);
+  //     });
+
+  //     expect(result.current.keywordsMap).toEqual(newKeywordsMap);
+  //   });
+  // });
 });
