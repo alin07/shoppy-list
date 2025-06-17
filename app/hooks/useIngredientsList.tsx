@@ -7,9 +7,7 @@ import {
   MeasurementSystem,
   AdditionalQuantities
 } from "../interfaces/ingredient";
-// import { parseIngredient } from "parse-ingredient";
 import { parseIngredient } from '@jlucaspains/sharp-recipe-parser';
-// import { parse } from 'recipe-ingredient-parser-v3';
 
 
 import { Recipe } from "../interfaces/recipe";
