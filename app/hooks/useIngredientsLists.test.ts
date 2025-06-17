@@ -189,23 +189,23 @@ describe('useIngredientsList', () => {
       mockParseIngredient
         .mockReturnValueOnce([{
           description: 'large eggs',
-          quantity: 2,
-          unitOfMeasure: '',
-          unitOfMeasureID: null,
-          quantity2: null,
-          isGroupHeader: false
-        }])
-        .mockReturnValueOnce([{
-          description: 'medium eggs',
-          quantity: 3,
-          unitOfMeasure: '',
-          unitOfMeasureID: null,
-          quantity2: null,
-          isGroupHeader: false
-        }])
-        .mockReturnValueOnce([{
-          description: 'egg',
           quantity: 1,
+          unitOfMeasure: '',
+          unitOfMeasureID: null,
+          quantity2: null,
+          isGroupHeader: false
+        }])
+        .mockReturnValueOnce([{
+          description: 'medium egg',
+          quantity: 1,
+          unitOfMeasure: '',
+          unitOfMeasureID: null,
+          quantity2: null,
+          isGroupHeader: false
+        }])
+        .mockReturnValueOnce([{
+          description: 'eggs',
+          quantity: 3,
           unitOfMeasure: '',
           unitOfMeasureID: null,
           quantity2: null,
@@ -269,11 +269,17 @@ describe('useIngredientsList', () => {
       const keywordsMap = result.current.keywordsMap
 
       expect(keywordsMap['eggs']).toBeDefined();
-      expect(keywordsMap['eggs'].quantity).toBe(6);
+      expect(keywordsMap['eggs'].quantity).toBe(5);
       expect(keywordsMap['cilantro']).toBeDefined();
       expect(keywordsMap['cilantro'].unitOfMeasure).toBe('cup');
       expect(keywordsMap['cilantro'].quantity).toBe(.75);
       expect(keywordsMap['cilantro'].additionalQuantities).toBeDefined();
+      expect(keywordsMap['cilantro'].additionalQuantities).toStrictEqual({
+        bunch: {
+          quantity: 1.5,
+          unitOfMeasure: "bunch"
+        }
+      });
 
       expect(Object.keys(keywordsMap['cilantro'].additionalQuantities || {})).toHaveLength(1);
       expect(Object.values(keywordsMap['cilantro'].additionalQuantities || {}).reduce((accum, val) => { return accum + val.quantity; }, 0)).toBe(1.5);
@@ -288,10 +294,12 @@ describe('useIngredientsList', () => {
       const { result } = renderHook(() => useIngredientsList());
 
       act(() => {
-        result.current.extractIngredients(mockRecipe);
+        result.current.extractIngredients({
+          mainEntityOfPage: undefined,
+          url: ''
+        });
       });
       const keywordsMap = result.current.keywordsMap
-      // Should not crash and keywordsMap should remain empty
       expect(keywordsMap).toEqual({});
     });
   });
