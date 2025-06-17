@@ -7,7 +7,11 @@ import {
   MeasurementSystem,
   AdditionalQuantities
 } from "../interfaces/ingredient";
-import { parseIngredient } from "parse-ingredient";
+// import { parseIngredient } from "parse-ingredient";
+import { parseIngredient } from '@jlucaspains/sharp-recipe-parser';
+// import { parse } from 'recipe-ingredient-parser-v3';
+
+
 import { Recipe } from "../interfaces/recipe";
 import {
   IMPERIAL_UNITS,
@@ -26,11 +30,12 @@ const INGREDIENT_SIZES = new Set([
 
 const INGREDIENT_KEYWORDS_TO_REMOVE = new Set([
   "minced", "smashed", "extra-virgin", "extra", "virgin", "fresh",
-  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "grated", "juiced", "sprigs", "for", "serving", "to serve", "black", "white", "kosher", "granulated", "all-purpose", "whole", "wheat", "of", "steamed", "smoked", "cured", "skin", "on", "filet", "knob"
+  "freshly", "ground", "kosher", "frozen", "canned", "bottled", "packaged", "pre-chopped", "pre-cooked", "pre-sliced", "pre-peeled", "pre-washed", "pre-rinsed", "bunch", "roughly", "cooked", "chopped", "sliced", "peeled", "washed", "rinsed", "grated", "juiced", "sprigs", "for", "serving", "to", "serve", "black", "white", "kosher", "granulated", "all - purpose", "whole", "wheat", "of", "steamed", "smoked", "cured", "skin", "on", "fillet", "knob",
+  "juice", "wedges", "wedge", "skins", "fillets", "knobs", "juices", "handful", "handfuls", "wild", "filet"
 ]);
 
 const KEYWORD_ENDINGS_TO_REMOVE = new Set([
-  "and", "or"
+  "and", "or", "to"
 ]);
 
 const determineUnitSystem = (unitId: string | null): MeasurementSystem => {
@@ -49,21 +54,23 @@ const removeIngSizeFromKeyword = (str: string): string => {
   return INGREDIENT_SIZES.has(str) ? "" : str;
 };
 
-const removeIngSizeFromDesc = (str: string): string => {
-  return str.split(" ").filter(s => !INGREDIENT_SIZES.has(s)).join(" ")
-}
+// const removeIngSizeFromDesc = (str: string): string => {
+//   return str.trim().split(" ").filter(s => !INGREDIENT_SIZES.has(s)).join(" ")
+// }
+
 const cleanIngredientKeyword = (ingredient: string): string => {
   if (!ingredient?.trim()) return "";
-
+  // if (ingredient === "Juice of")
   try {
     const words = ingredient
       .replace(/ *\([^)]*\) */g, "") // Remove content in parentheses
       .split(" ")
-      .map(word => word.replace(/^\s*,+\s*|\s*,+\s*$/g, "")) // Remove leading/trailing commas
+      .map(word => word.trim().replace(/^\s*,+\s*|\s*,+\s*$/g, "")) // Remove leading/trailing commas
       .filter(word => word &&
         !INGREDIENT_SIZES.has(word.toLowerCase()) &&
         !INGREDIENT_KEYWORDS_TO_REMOVE.has(word.toLowerCase()) &&
-        !Number.isNaN(word)
+        !Number.isNaN(word) &&
+        !word.includes("-")
       );
 
     while (words.length > 0 && KEYWORD_ENDINGS_TO_REMOVE.has(words[words.length - 1]?.toLowerCase())) {
@@ -82,17 +89,21 @@ const parseRecipeIngredient = (
   recipeData: Recipe
 ): ParsedIngredient | null => {
   try {
-    const parsed = parseIngredient(removeIngSizeFromDesc(ingredientText))[0];
+    const parsed = parseIngredient(ingredientText, 'en');
     if (!parsed) return null;
-    const keyword = cleanIngredientKeyword(parsed.description);
-    const unitSystem = determineUnitSystem(parsed.unitOfMeasureID);
+
+    const keyword =
+      cleanIngredientKeyword(
+        parsed.ingredient.toLowerCase()
+      );
+    const unitSystem = determineUnitSystem(parsed.unit);
 
     return {
       recipeUrl: recipeData.url,
-      description: parsed.description,
+      description: ingredientText,
       quantity: Number(parsed.quantity) || 0,
-      unitOfMeasure: parsed.unitOfMeasure,
-      unitOfMeasureID: parsed.unitOfMeasureID,
+      unitOfMeasure: parsed.unitText,
+      unitOfMeasureID: parsed.unit,
       isChecked: false,
       keyword,
       measurementSystem: unitSystem,
@@ -321,8 +332,10 @@ const useIngredientsList = () => {
               ing
             );
 
-            if (keywordOrInflection !== pluralKeyword)
+            if (keywordOrInflection !== pluralKeyword) {
+              updatedMap[pluralKeyword] = updatedMap[keywordOrInflection]
               delete updatedMap[keywordOrInflection];
+            }
           } else {
             updatedMap[keywordOrInflection] = consolidateKeywordIng(
               map,
