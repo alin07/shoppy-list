@@ -7,9 +7,7 @@ import {
   MeasurementSystem,
   AdditionalQuantities
 } from "../interfaces/ingredient";
-// import { parseIngredient } from "parse-ingredient";
 import { parseIngredient } from '@jlucaspains/sharp-recipe-parser';
-// import { parse } from 'recipe-ingredient-parser-v3';
 
 
 import { Recipe } from "../interfaces/recipe";
@@ -54,13 +52,8 @@ const removeIngSizeFromKeyword = (str: string): string => {
   return INGREDIENT_SIZES.has(str) ? "" : str;
 };
 
-// const removeIngSizeFromDesc = (str: string): string => {
-//   return str.trim().split(" ").filter(s => !INGREDIENT_SIZES.has(s)).join(" ")
-// }
-
 const cleanIngredientKeyword = (ingredient: string): string => {
   if (!ingredient?.trim()) return "";
-  // if (ingredient === "Juice of")
   try {
     const words = ingredient
       .replace(/ *\([^)]*\) */g, "") // Remove content in parentheses
