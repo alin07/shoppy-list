@@ -15,6 +15,7 @@ const replaceBadControlCharacters = (jsonString: string) => {
   return jsonString.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
 
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
