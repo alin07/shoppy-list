@@ -21,7 +21,6 @@ export default function Home() {
   const {
     extractIngredients,
     keywordsMap,
-    // setKeywordsMap,
     toggleCheckedKeyword,
     toggleCheckedIngredient
   } = useIngredientsList();
@@ -108,5 +107,3 @@ export default function Home() {
     </div>
   );
 }
-
-

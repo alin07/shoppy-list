@@ -2,6 +2,14 @@ import { ChangeEventHandler } from "react";
 import { KeywordIngredient } from "../interfaces/ingredient";
 import Accordion from "./accordian";
 
+const formatNumber = (num: number) => {
+  if (Number.isInteger(num)) {
+    return num.toString();
+  } else {
+    return num.toFixed(2);
+  }
+}
+
 const GroupedIngredients = (props: {
   setChecked: ChangeEventHandler<HTMLInputElement>;
   setCheckedKeyword: ChangeEventHandler<HTMLInputElement>;
@@ -18,7 +26,7 @@ const GroupedIngredients = (props: {
   const additionalQuantities = keywordIngredient.additionalQuantities &&
     Object.keys(keywordIngredient.additionalQuantities).length > 0
     ? Object.values(keywordIngredient.additionalQuantities).map(q =>
-      `${q.quantity}${" " + q.unitOfMeasure || ""}`
+      `${formatNumber(q.quantity)}${" " + q.unitOfMeasure || ""}`
     )
     : ""
 
@@ -37,7 +45,7 @@ const GroupedIngredients = (props: {
               onChange={setCheckedKeyword}
             />
             {keywordIngredient?.quantity > 0
-              ? keywordIngredient.quantity
+              ? formatNumber(keywordIngredient.quantity)
               : ""
             }
             {" "}

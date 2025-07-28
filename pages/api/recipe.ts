@@ -57,7 +57,7 @@ export default async function handler(
           (obj: { [x: string]: string }) => obj["@type"] === "Recipe"
         )[0];
       }
-      return res.status(200).json(json);
+      return res.status(200).json(recipeObj);
       // console.log(test)
       // return res.status(200).json(test);
     } else {
